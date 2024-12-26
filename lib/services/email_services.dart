@@ -6,9 +6,9 @@ class EmailService {
   final String smtpServer = 'smtp.gmail.com';
   final int smtpPort = 587;
   final String emailAddress =
-      ''; // Replace with your email
+      'pranshalecommerce@gmail.com'; // Replace with your email
   final String emailPassword =
-      ''; // Replace with your email password (or app password)
+      'Pranshal@123'; // Replace with your email password (or app password)
 
   // Send OTP Email to the user
   Future<void> sendOtpEmail(String recipientEmail, String otpCode) async {
@@ -24,7 +24,8 @@ class EmailService {
 
       // Create the message
       final message = Message()
-        ..from = Address(emailAddress, 'Your App Name') // Sender email and name
+        ..from =
+            Address(emailAddress, 'Pranshal Ecommerce') // Sender email and name
         ..recipients.add(recipientEmail) // Recipient email
         ..subject = 'Your OTP Code'
         ..text = 'Your OTP code is: $otpCode';

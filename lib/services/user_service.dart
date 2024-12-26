@@ -10,7 +10,8 @@ class UserService {
 
   // Check if an email already exists in the database
   Future<bool> isEmailExists(String email) async {
-    final results = await connection.query('SELECT id FROM users WHERE email = ?', [email]);
+    final results =
+        await connection.query('SELECT id FROM users WHERE email = ?', [email]);
     return results.isNotEmpty;
   }
 
@@ -35,7 +36,7 @@ class UserService {
 
     // Insert the user into the database
     final result = await connection.query(
-      'INSERT INTO users (username, email, password, phoneNumber, token) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (username, email, password, phoneNumber, token,otp,email_verified) VALUES (?, ?, ?, ?, ?,?,?)',
       [user.username, user.email, hashedPassword, user.phoneNumber, user.token],
     );
 
@@ -79,7 +80,8 @@ class UserService {
       {
         'id': user.id,
         'email': user.email,
-        'exp': DateTime.now().add(Duration(hours: 24)).millisecondsSinceEpoch ~/ 1000,
+        'exp': DateTime.now().add(Duration(hours: 24)).millisecondsSinceEpoch ~/
+            1000,
       },
       issuer: 'your-issuer',
     );

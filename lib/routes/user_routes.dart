@@ -21,6 +21,8 @@ class AuthRoutes {
       final data = jsonDecode(payload);
 
       try {
+                String otpCode = generateOtp(); // Implement OTP generator
+
         // Check if the email already exists
         if (await userService.isEmailExists(data['email'])) {
           return Response(400,
@@ -44,7 +46,6 @@ class AuthRoutes {
         final registeredUser = await userService.registerUser(user);
 
         // Generate OTP and send email (optional)
-        String otpCode = generateOtp(); // Implement OTP generator
         await emailService.sendOtpEmail(user.email, otpCode);
 
         return Response.ok(jsonEncode({

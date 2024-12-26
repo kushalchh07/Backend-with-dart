@@ -5,6 +5,8 @@ class User {
   String password; // Will store hashed password
   final String phoneNumber;
   String? token;
+  String? otp;
+  String? emaiVerified;
 
   User({
     this.id, // ID will be set after insertion
@@ -13,6 +15,8 @@ class User {
     required this.password,
     required this.phoneNumber,
     this.token,
+    this.otp,
+    this.emaiVerified,
   });
 
   // Method to convert the User object to a map (for MySQL insertion)
@@ -22,6 +26,8 @@ class User {
         'email': email,
         'phoneNumber': phoneNumber,
         'token': token,
+        'otp': otp,
+        'email_verified': emaiVerified,
       };
 
   // Static method to create a User object from JSON
@@ -32,5 +38,7 @@ class User {
         password: json['password'],
         phoneNumber: json['phoneNumber'],
         token: json['token'],
+        otp: json['otp'],
+        emaiVerified: json['email_verified'],
       );
 }
