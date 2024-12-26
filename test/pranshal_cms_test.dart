@@ -1,4 +1,3 @@
-import 'package:pranshal_cms/pranshal_cms.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -6,3 +5,5 @@ void main() {
     expect(calculate(), 42);
   });
 }
+
+calculate() {}
