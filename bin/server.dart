@@ -11,7 +11,7 @@ Future<MySqlConnection> createConnection() async {
     host: 'localhost', // MySQL server address
     port: 3306, // MySQL default port
     user: 'root', // Your MySQL username
-    password: 'pranita', // Your MySQL password
+    password: '', // Your MySQL password
     db: 'pranshal_ecommerce', // Your MySQL database name
   );
 

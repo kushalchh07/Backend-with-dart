@@ -10,8 +10,7 @@ class UserService {
 
   // Check if an email already exists in the database
   Future<bool> isEmailExists(String email) async {
-    final results =
-        await connection.query('SELECT id FROM users WHERE email = ?', [email]);
+    final results = await connection.query('SELECT id FROM users WHERE email = ?', [email]);
     return results.isNotEmpty;
   }
 
@@ -33,16 +32,15 @@ class UserService {
 
     // Return the user with the token
     user.token = token;
+
     // Insert the user into the database
     final result = await connection.query(
-      'INSERT INTO users (username, email, password, phoneNumber,token) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (username, email, password, phoneNumber, token) VALUES (?, ?, ?, ?, ?)',
       [user.username, user.email, hashedPassword, user.phoneNumber, user.token],
     );
 
     // Set the user ID after insert (auto-incremented by MySQL)
     user.id = result.insertId;
-
-    // Generate JWT token
 
     return user;
   }
@@ -50,8 +48,9 @@ class UserService {
   // Login user and generate a JWT token
   Future<String> login(String email, String password) async {
     final results = await connection.query(
-        'SELECT id, username, email, password FROM users WHERE email = ?',
-        [email]);
+      'SELECT id, username, email, password FROM users WHERE email = ?',
+      [email],
+    );
 
     if (results.isEmpty) {
       throw Exception('Invalid email or password');
@@ -67,7 +66,7 @@ class UserService {
       id: user['id'],
       username: user['username'],
       email: user['email'],
-      password: password,
+      password: password, // Password is not needed here
       phoneNumber: '', // Phone number is not needed for login
     ));
 
@@ -80,8 +79,7 @@ class UserService {
       {
         'id': user.id,
         'email': user.email,
-        'exp': DateTime.now().add(Duration(hours: 24)).millisecondsSinceEpoch ~/
-            1000,
+        'exp': DateTime.now().add(Duration(hours: 24)).millisecondsSinceEpoch ~/ 1000,
       },
       issuer: 'your-issuer',
     );
@@ -108,8 +106,9 @@ class UserService {
     final userId = jwt.payload['id'];
 
     final results = await connection.query(
-        'SELECT id, username, email, phoneNumber FROM users WHERE id = ?',
-        [userId]);
+      'SELECT id, username, email, phoneNumber FROM users WHERE id = ?',
+      [userId],
+    );
 
     if (results.isEmpty) {
       throw Exception('User not found');
