@@ -10,7 +10,7 @@ class Database {
         host: 'localhost',
         port: 3306,
         user: 'root',
-        password: '', // Replace with your database password
+        password: 'pranita', // Replace with your database password
         db: 'pranshal_ecommerce', // Replace with your database name
       );
 
@@ -92,6 +92,18 @@ CREATE TABLE IF NOT EXISTS categorized_products (
 ''');
       // we are using varchar (500) for address because it produced blob error when we try to store address as text similarly for thumbnail
       print('Ensured "categorized_products" table exists.');
+      await connection.query('''
+  CREATE TABLE IF NOT EXISTS brands (
+    brand_id INT AUTO_INCREMENT PRIMARY KEY,
+    brand_name VARCHAR(255) NOT NULL,
+    brand_thumbnail VARCHAR(500),
+    brand_description  VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  );
+''');
+      print('Ensured "brands" table exists.');
+
     } catch (e) {
       print('Error ensuring tables exist: $e');
       rethrow; // Rethrow the exception for further handling
