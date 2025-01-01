@@ -1,6 +1,8 @@
 import 'package:pranshal_cms/database/db.dart';
+import 'package:pranshal_cms/routes/product_category_routes.dart';
 import 'package:pranshal_cms/routes/user_routes.dart';
 import 'package:pranshal_cms/routes/category_routes.dart'; // Import category routes
+import 'package:pranshal_cms/services/product_category_service.dart';
 import 'package:pranshal_cms/services/user_service.dart';
 import 'package:pranshal_cms/services/category_service.dart'; // Import category service
 import 'package:shelf/shelf.dart';
@@ -31,16 +33,17 @@ Future<void> main() async {
     // Initialize services
     final userService = UserService(connection);
     final categoryService = CategoryService(connection);
-
+    final productService = ProductService(connection);
     // Initialize routes
     final authRoutes = AuthRoutes(userService);
     final categoryRoutes = CategoryRoutes(categoryService);
+    final productRoutes = ProductRoutes(productService);
 
     // Create router and mount routes
     final app = Router();
     app.mount('/api/auth/', authRoutes.router);
-    app.mount(
-        '/api/categories/', categoryRoutes.router); // Mount category routes
+    app.mount('/api/categories/', categoryRoutes.router);
+    app.mount('/api/products/', productRoutes.router); // Mount category routes
 
     // Create a pipeline with middlewares
     final handler = Pipeline()

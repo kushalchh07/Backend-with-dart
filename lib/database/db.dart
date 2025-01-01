@@ -70,8 +70,28 @@ class Database {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         );
       ''');
-      // we are using varchar (500) for address because it produced blob error when we try to store address as text similarly for thumbnail
       print('Ensured "users" table exists.');
+      await connection.query('''
+CREATE TABLE IF NOT EXISTS categorized_products (
+  product_id INT AUTO_INCREMENT PRIMARY KEY,
+  product_name VARCHAR(255) NOT NULL,
+  product_description VARCHAR(500),
+  product_thumbnail VARCHAR(500),
+  normal_price DECIMAL(10, 2) NOT NULL,
+  sell_price DECIMAL(10, 2) NOT NULL,
+  total_product_count INT NOT NULL,
+  category_id INT NOT NULL,
+  category_name VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE
+);
+
+
+
+''');
+      // we are using varchar (500) for address because it produced blob error when we try to store address as text similarly for thumbnail
+      print('Ensured "categorized_products" table exists.');
     } catch (e) {
       print('Error ensuring tables exist: $e');
       rethrow; // Rethrow the exception for further handling
