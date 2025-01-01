@@ -7,6 +7,9 @@ class User {
   String? token;
   String? otp;
   String? emaiVerified;
+  String? thumbnail;
+  String? address;
+
 
   User({
     this.id, // ID will be set after insertion
@@ -17,6 +20,9 @@ class User {
     this.token,
     this.otp,
     this.emaiVerified,
+    this.thumbnail,
+    this.address
+
   });
 
   // Method to convert the User object to a map (for MySQL insertion)
@@ -28,6 +34,10 @@ class User {
         'token': token,
         'otp': otp,
         'email_verified': emaiVerified,
+        'password': password,
+        'thumbnail': thumbnail,
+        'address': address
+
       };
 
   // Static method to create a User object from JSON
@@ -40,5 +50,8 @@ class User {
         token: json['token'],
         otp: json['otp'],
         emaiVerified: json['email_verified'],
+        thumbnail: json['thumbnail'],
+        address: json['address'],
+        
       );
 }

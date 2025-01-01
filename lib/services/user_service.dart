@@ -68,7 +68,7 @@ class UserService {
       username: user['username'],
       email: user['email'],
       password: password, // Password is not needed here
-      phoneNumber: '', // Phone number is not needed for login
+      phoneNumber: user['phoneNumber'], // Phone number is not needed for login
     ));
 
     return token;
