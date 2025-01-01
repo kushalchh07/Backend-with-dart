@@ -6,10 +6,10 @@ import '../models/product_category_model.dart';
 import '../services/product_category_service.dart';
 
 
-class ProductRoutes {
-  final ProductService productService;
+class CategorizedProductRoutes {
+  final CategorizedProductService productService;
 
-  ProductRoutes(this.productService);
+  CategorizedProductRoutes(this.productService);
 
   Router get router {
     final router = Router();
@@ -20,7 +20,7 @@ class ProductRoutes {
         final payload = await request.readAsString();
         final data = jsonDecode(payload);
 
-        final product = Product(
+        final product = ProductCategoryModel(
           productName: data['product_name'],
           productDescription: data['product_description'],
           productThumbnail: data['product_thumbnail'],
