@@ -121,6 +121,29 @@ CREATE TABLE IF NOT EXISTS categorized_products (
   );
 ''');
  print('Ensured "products" table exists.');
+
+ await connection.query('''
+  CREATE TABLE IF NOT EXISTS flash_sale_products (
+    flash_sale_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    category_id INT NOT NULL,
+    brand_id INT NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    product_description VARCHAR(500),
+    product_thumbnail VARCHAR(500),
+    normal_price DECIMAL(10, 2) NOT NULL,
+    sell_price DECIMAL(10, 2) NOT NULL,
+    total_product_count INT NOT NULL,
+    discount_percentage DECIMAL(5, 2) NOT NULL,
+    discounted_price DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+    FOREIGN KEY (category_id) REFERENCES categories(category_id),
+    FOREIGN KEY (brand_id) REFERENCES brands(brand_id)
+  );
+''');
+ print('Ensured "flash_sale_products" table exists.');
     } catch (e) {
       print('Error ensuring tables exist: $e');
       rethrow; // Rethrow the exception for further handling

@@ -1,10 +1,12 @@
 import 'package:pranshal_cms/database/db.dart';
 import 'package:pranshal_cms/routes/brands_routes.dart';
+import 'package:pranshal_cms/routes/flash_sales_product_routes.dart';
 import 'package:pranshal_cms/routes/product_category_routes.dart';
 import 'package:pranshal_cms/routes/product_routes.dart';
 import 'package:pranshal_cms/routes/user_routes.dart';
 import 'package:pranshal_cms/routes/category_routes.dart'; // Import category routes
 import 'package:pranshal_cms/services/brands_service.dart';
+import 'package:pranshal_cms/services/flash_sale_service.dart';
 import 'package:pranshal_cms/services/product_category_service.dart';
 import 'package:pranshal_cms/services/product_service.dart';
 import 'package:pranshal_cms/services/user_service.dart';
@@ -40,6 +42,7 @@ Future<void> main() async {
     final categorizedProductService = CategorizedProductService(connection);
     final brandService = BrandService(connection);
     final productService = ProductService(connection);
+    final flashSaleProductService = FlashSaleProductService(connection);
     // Initialize routes
     final authRoutes = AuthRoutes(userService);
     final categoryRoutes = CategoryRoutes(categoryService);
@@ -47,6 +50,8 @@ Future<void> main() async {
         CategorizedProductRoutes(categorizedProductService);
     final brandRoutes = BrandRoutes(brandService);
     final productRoutes = ProductRoutes(productService);
+    final flashSaleProductRoutes =
+        FlashSaleProductRoutes(flashSaleProductService);
 
     // Create router and mount routes
     final app = Router();
@@ -54,7 +59,9 @@ Future<void> main() async {
     app.mount('/api/categories/', categoryRoutes.router);
     app.mount('/api/categorizedproducts/', categorizedProductRoutes.router);
     app.mount('/api/brands/', brandRoutes.router);
-    app.mount('/api/products/', productRoutes.router); // Mount category routes
+    app.mount('/api/products/', productRoutes.router);
+    app.mount('/api/flash-sale-products/',
+        flashSaleProductRoutes.router); // Mount category routes
 
     // Create a pipeline with middlewares
     final handler = Pipeline()
