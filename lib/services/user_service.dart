@@ -36,8 +36,8 @@ class UserService {
 
     // Insert the user into the database
     final result = await connection.query(
-      'INSERT INTO users (username, email, password, phoneNumber, token,otp,email_verified) VALUES (?, ?, ?, ?, ?,?,?)',
-      [user.username, user.email, hashedPassword, user.phoneNumber, user.token],
+      'INSERT INTO users (username, email, password, phone_number, ) VALUES (?, ?, ?, ?,)',
+      [user.username, user.email, hashedPassword, user.phoneNumber,],
     );
 
     // Set the user ID after insert (auto-incremented by MySQL)
@@ -68,7 +68,7 @@ class UserService {
       username: user['username'],
       email: user['email'],
       password: password, // Password is not needed here
-      phoneNumber: user['phoneNumber'], // Phone number is not needed for login
+      phoneNumber: user['phone_number'], // Phone number is not needed for login
     ));
 
     return token;
@@ -122,7 +122,7 @@ class UserService {
       username: user['username'],
       email: user['email'],
       password: '', // Password is not needed when returning user info
-      phoneNumber: user['phoneNumber'],
+      phoneNumber: user['phone_number'],
     );
   }
 }
