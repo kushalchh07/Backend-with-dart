@@ -40,18 +40,22 @@ class Database {
   // Ensure required tables exist
   static Future<void> _ensureTablesExist(MySqlConnection connection) async {
     try {
-        // Ensure "users" table exists
+      // Ensure "users" table exists
       await connection.query('''
-        CREATE TABLE IF NOT EXISTS users (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          username VARCHAR(255) NOT NULL,
-          email VARCHAR(255) NOT NULL UNIQUE,
-          password VARCHAR(255) NOT NULL,
-          phone_number VARCHAR(20) NOT NULL,
-          
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        );
+ CREATE TABLE IF NOT EXISTS users (
+  user_id INT AUTO_INCREMENT PRIMARY KEY,
+  fullname VARCHAR(255) NOT NULL,
+  email_address VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  contact_number VARCHAR(20) NOT NULL,
+  otp VARCHAR(6),
+  email_verified ENUM('0', '1') DEFAULT '0',
+  address VARCHAR(500),
+  profile_image VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
       ''');
       print('Ensured "users" table exists.');
       // Ensure "categories" table exists
@@ -67,7 +71,6 @@ class Database {
       ''');
       print('Ensured "categories" table exists.');
 
-    
       await connection.query('''
 CREATE TABLE IF NOT EXISTS categorized_products (
   product_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -164,6 +167,26 @@ CREATE TABLE IF NOT EXISTS categorized_products (
 ''');
 
       print('Ensured "carts" table exists.');
+      await connection.query('''
+  CREATE TABLE IF NOT EXISTS wishlist (
+    wishlist_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL, -- Foreign key to link with the user
+    product_id INT NOT NULL, -- Foreign key to link with the product
+    product_name VARCHAR(255) NOT NULL,
+    product_thumbnail VARCHAR(500),
+    product_description  VARCHAR(500),
+    normal_price DECIMAL(10, 2) NOT NULL,
+    sell_price DECIMAL(10, 2) NOT NULL,
+    discount_percentage DECIMAL(5, 2), -- For flash-sale products
+    discounted_price DECIMAL(10, 2), -- Calculated discounted price if applicable
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+  );
+''');
+
+      print('Ensured "wishlists" table exists.');
     } catch (e) {
       print('Error ensuring tables exist: $e');
       rethrow; // Rethrow the exception for further handling
