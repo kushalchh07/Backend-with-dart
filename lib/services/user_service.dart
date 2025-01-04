@@ -1,128 +1,92 @@
 import 'package:mysql1/mysql1.dart';
-import 'package:bcrypt/bcrypt.dart';
-import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import '../models/user.dart';
+
+import '../models/user_model.dart';
 
 class UserService {
   final MySqlConnection connection;
 
   UserService(this.connection);
 
-  // Check if an email already exists in the database
-  Future<bool> isEmailExists(String email) async {
-    final results =
-        await connection.query('SELECT id FROM users WHERE email = ?', [email]);
-    return results.isNotEmpty;
-  }
-
-  // Hash the password using bcrypt
-  String _hashPassword(String password) {
-    return BCrypt.hashpw(password, BCrypt.gensalt());
-  }
-
-  // Verify the password using bcrypt
-  bool _verifyPassword(String plainPassword, String hashedPassword) {
-    return BCrypt.checkpw(plainPassword, hashedPassword);
-  }
-
-  // Register a new user and save to the database
+  // Register a new user
   Future<User> registerUser(User user) async {
-    // Hash the password before saving
-    final hashedPassword = _hashPassword(user.password);
-    final token = await _generateToken(user);
-
-    // Return the user with the token
-    user.token = token;
-
-    // Insert the user into the database
     final result = await connection.query(
-      'INSERT INTO users (username, email, password, phone_number, ) VALUES (?, ?, ?, ?,)',
-      [user.username, user.email, hashedPassword, user.phoneNumber,],
+      '''INSERT INTO users (fullname, email_address, contact_number, password, otp, email_verified) 
+      VALUES (?, ?, ?, ?, ?, ?)''',
+      [user.fullname, user.emailAddress, user.contactNumber, user.password, user.otp, user.emailVerified],
     );
 
-    // Set the user ID after insert (auto-incremented by MySQL)
-    user.id = result.insertId;
-
-    return user;
-  }
-
-  // Login user and generate a JWT token
-  Future<String> login(String email, String password) async {
-    final results = await connection.query(
-      'SELECT id, username, email, password FROM users WHERE email = ?',
-      [email],
-    );
-
-    if (results.isEmpty) {
-      throw Exception('Invalid email or password');
-    }
-
-    final user = results.first;
-    if (!_verifyPassword(password, user['password'])) {
-      throw Exception('Invalid email or password');
-    }
-
-    // Generate JWT token
-    final token = await _generateToken(User(
-      id: user['id'],
-      username: user['username'],
-      email: user['email'],
-      password: password, // Password is not needed here
-      phoneNumber: user['phone_number'], // Phone number is not needed for login
-    ));
-
-    return token;
-  }
-
-  // Generate JWT token
-  Future<String> _generateToken(User user) async {
-    final jwt = JWT(
-      {
-        'id': user.id,
-        'email': user.email,
-        'exp': DateTime.now().add(Duration(hours: 24)).millisecondsSinceEpoch ~/
-            1000,
-      },
-      issuer: 'your-issuer',
-    );
-    return jwt.sign(SecretKey('your-secret-key'));
-  }
-
-  // Verify the token (check expiration and validity)
-  Future<bool> verifyToken(String token) async {
-    try {
-      final jwt = JWT.verify(token, SecretKey('your-secret-key'));
-      final exp = jwt.payload['exp'];
-      if (exp != null && exp < DateTime.now().millisecondsSinceEpoch ~/ 1000) {
-        return false; // Token expired
-      }
-      return true; // Token is valid
-    } catch (e) {
-      return false; // Invalid or malformed token
-    }
-  }
-
-  // Get user by token
-  Future<User> getUserByToken(String token) async {
-    final jwt = JWT.verify(token, SecretKey('your-secret-key'));
-    final userId = jwt.payload['id'];
-
-    final results = await connection.query(
-      'SELECT id, username, email, phoneNumber FROM users WHERE id = ?',
-      [userId],
-    );
-
-    if (results.isEmpty) {
-      throw Exception('User not found');
-    }
-
-    final user = results.first;
     return User(
-      id: user['id'],
-      username: user['username'],
-      email: user['email'],
-      password: '', // Password is not needed when returning user info
-      phoneNumber: user['phone_number'],
+      userId: result.insertId,
+      fullname: user.fullname,
+      emailAddress: user.emailAddress,
+      contactNumber: user.contactNumber,
+      password: user.password,
+      otp: user.otp,
+      emailVerified: user.emailVerified,
     );
+  }
+
+  // Login user
+  Future<User?> loginUser(String emailAddress, String password) async {
+    final result = await connection.query(
+      'SELECT * FROM users WHERE email_address = ? AND password = ?',
+      [emailAddress, password],
+    );
+
+    if (result.isEmpty) return null;
+
+    return User.fromMap(result.first.fields);
+  }
+
+  // Update user profile
+  Future<void> updateProfile(User user) async {
+    await connection.query(
+      '''UPDATE users 
+         SET fullname = ?, email_address = ?, contact_number = ?, address = ? 
+         WHERE user_id = ?''',
+      [user.fullname, user.emailAddress, user.contactNumber, user.address, user.userId],
+    );
+  }
+
+  // Update profile image
+ Future<void> updateProfileImage(int userId, String profileImageFilename) async {
+    await connection.query(
+      '''UPDATE users SET profile_image = ? WHERE user_id = ?''',
+      [profileImageFilename, userId],
+    );
+  }
+
+  // Change password
+  Future<void> changePassword(int userId, String newPassword) async {
+    await connection.query(
+      'UPDATE users SET password = ? WHERE user_id = ?',
+      [newPassword, userId],
+    );
+  }
+
+  // Handle forgot password
+  Future<void> updatePasswordWithOtp(String emailAddress, String newPassword) async {
+    await connection.query(
+      'UPDATE users SET password = ? WHERE email_address = ?',
+      [newPassword, emailAddress],
+    );
+  }
+
+  // Verify OTP
+  Future<bool> verifyOtp(String emailAddress, String otp) async {
+    final result = await connection.query(
+      'SELECT * FROM users WHERE email_address = ? AND otp = ?',
+      [emailAddress, otp],
+    );
+
+    if (result.isEmpty) return false;
+
+    // Update email_verified status to true
+    await connection.query(
+      'UPDATE users SET email_verified = 1 WHERE email_address = ?',
+      [emailAddress],
+    );
+
+    return true;
   }
 }

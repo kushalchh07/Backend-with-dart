@@ -6,6 +6,7 @@ import 'package:pranshal_cms/routes/product_category_routes.dart';
 import 'package:pranshal_cms/routes/product_routes.dart';
 import 'package:pranshal_cms/routes/user_routes.dart';
 import 'package:pranshal_cms/routes/category_routes.dart'; // Import category routes
+import 'package:pranshal_cms/routes/wishlist_routes.dart';
 import 'package:pranshal_cms/services/brands_service.dart';
 import 'package:pranshal_cms/services/cart_service.dart';
 import 'package:pranshal_cms/services/flash_sale_service.dart';
@@ -13,6 +14,7 @@ import 'package:pranshal_cms/services/product_category_service.dart';
 import 'package:pranshal_cms/services/product_service.dart';
 import 'package:pranshal_cms/services/user_service.dart';
 import 'package:pranshal_cms/services/category_service.dart'; // Import category service
+import 'package:pranshal_cms/services/wishlist_service.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
@@ -46,6 +48,7 @@ Future<void> main() async {
     final productService = ProductService(connection);
     final flashSaleProductService = FlashSaleProductService(connection);
     final cartService = CartService(connection);
+    final wishlistService = WishlistService(connection);
     // Initialize routes
     final authRoutes = AuthRoutes(userService);
     final categoryRoutes = CategoryRoutes(categoryService);
@@ -56,6 +59,7 @@ Future<void> main() async {
     final flashSaleProductRoutes =
         FlashSaleProductRoutes(flashSaleProductService);
     final cartRoutes = CartRoutes(cartService);
+    final wishlistRoutes = WishlistRoutes(wishlistService);
 
     // Create router and mount routes
     final app = Router();
@@ -65,7 +69,9 @@ Future<void> main() async {
     app.mount('/api/brands/', brandRoutes.router);
     app.mount('/api/products/', productRoutes.router);
     app.mount('/api/flash-sale-products/', flashSaleProductRoutes.router);
-    app.mount('/api/carts/', cartRoutes.router); // Mount category routes
+    app.mount('/api/carts/', cartRoutes.router);
+    app.mount(
+        '/api/wishlists/', wishlistRoutes.router); // Mount category routes
 
     // Create a pipeline with middlewares
     final handler = Pipeline()

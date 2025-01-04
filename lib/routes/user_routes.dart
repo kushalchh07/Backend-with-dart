@@ -1,152 +1,181 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:shelf/shelf.dart';
+import 'package:shelf_multipart/shelf_multipart.dart';
 import 'package:shelf_router/shelf_router.dart';
-import '../models/user.dart';
-import '../services/email_services.dart';
+
+import '../models/user_model.dart';
 import '../services/user_service.dart';
-import 'dart:math';
 
-class AuthRoutes {
+class UserRoutes {
   final UserService userService;
-  final EmailService emailService = EmailService(); // Email service instance
 
-  AuthRoutes(this.userService);
+  UserRoutes(this.userService);
 
   Router get router {
     final router = Router();
 
-    // Register User
+    // Register user
     router.post('/register', (Request request) async {
-      final payload = await request.readAsString();
-      final data = jsonDecode(payload);
-
       try {
-                String otpCode = generateOtp(); // Implement OTP generator
+        final payload = await request.readAsString();
+        final data = jsonDecode(payload);
 
-        // Check if the email already exists
-        if (await userService.isEmailExists(data['email'])) {
-          return Response(400,
-              body: jsonEncode({
-                'status': false,
-                'message': 'User with this email already exists',
-              }));
-        }
-
-        // Creating user object
         final user = User(
-          id: DateTime.now()
-              .millisecondsSinceEpoch, // Temporary ID, will be updated after DB insert
-          username: data['username'],
-          email: data['email'],
+          fullname: data['fullname'],
+          emailAddress: data['email_address'],
+          contactNumber: data['contact_number'],
           password: data['password'],
-          phoneNumber: data['phoneNumber'],
+          otp: data['otp'],
+          userId: data['user_id'],
         );
 
-        // Register the user by hashing the password and saving in MySQL
         final registeredUser = await userService.registerUser(user);
 
-        // Generate OTP and send email (optional)
-        await emailService.sendOtpEmail(user.email, otpCode);
-
         return Response.ok(jsonEncode({
           'status': true,
-          'token': registeredUser.token,
-          'name': registeredUser.username,
-          'id': registeredUser.id,
-          'email': registeredUser.email,
-          'phoneNumber': registeredUser.phoneNumber,
+          'message': 'User registered successfully',
+          'user': registeredUser.toMap(),
         }));
       } catch (e) {
-        return Response(400,
-            body: jsonEncode({
-              'status': false,
-              'message': 'Registration failed: ${e.toString()}',
-            }));
+        return Response(500, body: jsonEncode({'status': false, 'message': e.toString()}));
       }
     });
 
-    // Login User
+    // Login user
     router.post('/login', (Request request) async {
-      final payload = await request.readAsString();
-      final data = jsonDecode(payload);
-
       try {
-        // Authenticate the user and generate JWT token
-        final token = await userService.login(data['email'], data['password']);
+        final payload = await request.readAsString();
+        final data = jsonDecode(payload);
 
-        return Response.ok(jsonEncode({
-          'status': true,
-          'token': token,
-          'message': 'Login successful',
-          'email': data['email'],
-          'phoneNumber': data['phoneNumber'],
-          'id': data['id'],
-        }));
-      } catch (e) {
-        return Response(400,
-            body: jsonEncode({
-              'status': false,
-              'message': 'Login failed: ${e.toString()}',
-            }));
-      }
-    });
+        final user = await userService.loginUser(data['email_address'], data['password']);
 
-    // Protected Profile Route
-    router.get('/profile', (Request request) async {
-      final authHeader = request.headers['Authorization'];
-
-      // Check if the Authorization header is missing or not in the correct format
-      if (authHeader == null || !authHeader.startsWith('Bearer ')) {
-        return Response(401,
-            body: jsonEncode({
-              'status': false,
-              'message': 'Unauthorized: Missing or invalid token',
-            }));
-      }
-
-      final token = authHeader.substring(7); // Remove the 'Bearer ' prefix
-
-      try {
-        // Verify if the token is valid
-        final isValid = await userService.verifyToken(token);
-        if (!isValid) {
-          return Response(401,
-              body: jsonEncode({
-                'status': false,
-                'message': 'Unauthorized: Invalid or expired token',
-              }));
+        if (user == null) {
+          return Response(401, body: jsonEncode({'status': false, 'message': 'Invalid credentials'}));
         }
 
-        // Get user information associated with the token
-        final user = await userService.getUserByToken(token);
-        return Response.ok(jsonEncode({
-          'status': true,
-          'user': {
-            'id': user.id,
-            'name': user.username,
-            'email': user.email,
-            'phoneNumber': user.phoneNumber,
-          },
-        }));
+        return Response.ok(jsonEncode({'status': true, 'user': user.toMap()}));
       } catch (e) {
-        return Response(401,
-            body: jsonEncode({
-              'status': false,
-              'message': 'Unauthorized: ${e.toString()}',
-            }));
+        return Response(500, body: jsonEncode({'status': false, 'message': e.toString()}));
+      }
+    });
+
+    // Update profile
+    router.put('/update-profile', (Request request) async {
+      try {
+        final payload = await request.readAsString();
+        final data = jsonDecode(payload);
+
+        final user = User(
+          userId: data['user_id'],
+          fullname: data['fullname'],
+          emailAddress: data['email_address'],
+          contactNumber: data['contact_number'],
+          address: data['address'],
+          password: '',
+        );
+
+        await userService.updateProfile(user);
+
+        return Response.ok(jsonEncode({'status': true, 'message': 'Profile updated successfully'}));
+      } catch (e) {
+        return Response(500, body: jsonEncode({'status': false, 'message': e.toString()}));
+      }
+    });
+
+    // Update profile image
+// Update profile image
+router.post('/update-profile-image', (Request request) async {
+  try {
+    // Validate Content-Type
+    final contentType = request.headers['content-type'];
+    if (contentType == null || !contentType.startsWith('multipart/form-data')) {
+      return Response(400, body: jsonEncode({'status': false, 'message': 'Invalid request. Content-Type must be multipart/form-data.'}));
+    }
+
+    // Parse the multipart request (we use await here)
+    final parts =  request.multipart(); // Using shelf_multipart package
+
+   
+
+    int? userId;
+    String? profileImageFilename;
+
+    // Ensure upload directory exists
+    final uploadDir = Directory('uploads/profileImages');
+    if (!await uploadDir.exists()) {
+      await uploadDir.create(recursive: true);
+    }
+
+    // Iterate over parts safely
+    await for (final part in parts) {
+      if (part.name == 'user_id') {
+        // Parse user_id from the form-data
+        final userIdString = await part.readAsString();
+        userId = int.tryParse(userIdString);
+
+        if (userId == null) {
+          return Response(400, body: jsonEncode({'status': false, 'message': 'Invalid user ID'}));
+        }
+      } else if (part.name == 'profile_image') {
+        // Handle the file upload
+        final filename = part.filename ?? 'default.jpg';
+        profileImageFilename = DateTime.now().millisecondsSinceEpoch.toString() + '.' + filename.split('.').last;
+
+        final file = File('${uploadDir.path}/$profileImageFilename');
+        await part.pipe(file.openWrite());
+      }
+    }
+
+    if (userId == null) {
+      return Response(400, body: jsonEncode({'status': false, 'message': 'Missing user ID in the request'}));
+    }
+
+    if (profileImageFilename != null) {
+      await userService.updateProfileImage(userId, profileImageFilename);
+
+      return Response.ok(jsonEncode({
+        'status': true,
+        'message': 'Profile image updated successfully',
+        'profile_image_url': 'http://yourdomain.com/profileImages/$profileImageFilename',
+      }));
+    }
+
+    return Response(400, body: jsonEncode({'status': false, 'message': 'Image upload failed. No file uploaded.'}));
+  } catch (e) {
+    return Response(500, body: jsonEncode({'status': false, 'message': e.toString()}));
+  }
+});
+
+
+    // Change password
+    router.put('/change-password', (Request request) async {
+      try {
+        final payload = await request.readAsString();
+        final data = jsonDecode(payload);
+
+        await userService.changePassword(data['user_id'], data['new_password']);
+
+        return Response.ok(jsonEncode({'status': true, 'message': 'Password changed successfully'}));
+      } catch (e) {
+        return Response(500, body: jsonEncode({'status': false, 'message': e.toString()}));
+      }
+    });
+
+    // Forgot password
+    router.post('/forgot-password', (Request request) async {
+      try {
+        final payload = await request.readAsString();
+        final data = jsonDecode(payload);
+
+        await userService.updatePasswordWithOtp(data['email_address'], data['new_password']);
+
+        return Response.ok(jsonEncode({'status': true, 'message': 'Password updated successfully'}));
+      } catch (e) {
+        return Response(500, body: jsonEncode({'status': false, 'message': e.toString()}));
       }
     });
 
     return router;
   }
-}
-
-String generateOtp([int length = 6]) {
-  const characters = '0123456789';
-  final rand = Random();
-  String otp = '';
-  for (int i = 0; i < length; i++) {
-    otp += characters[rand.nextInt(characters.length)];
-  }
-  return otp;
 }

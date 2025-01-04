@@ -21,6 +21,7 @@ dependencies:
   dart_jsonwebtoken: ^2.14.2
   mysql1: ^0.20.0
   mailer: ^6.3.0
+  shelf_multipart: ^2.0.0
   # path: ^1.8.0
 
 dev_dependencies:
