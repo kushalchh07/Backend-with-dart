@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS categorized_products (
     total_price DECIMAL(10, 2) AS (quantity * COALESCE(discounted_price, sell_price)) STORED, -- Use discounted price if available
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (product_id) REFERENCES products(product_id)
   );
 ''');
@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS categorized_products (
     discounted_price DECIMAL(10, 2), -- Calculated discounted price if applicable
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (product_id) REFERENCES products(product_id)
   );
 ''');

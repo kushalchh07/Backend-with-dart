@@ -50,7 +50,7 @@ Future<void> main() async {
     final cartService = CartService(connection);
     final wishlistService = WishlistService(connection);
     // Initialize routes
-    final authRoutes = AuthRoutes(userService);
+    final authRoutes = UserRoutes(userService);
     final categoryRoutes = CategoryRoutes(categoryService);
     final categorizedProductRoutes =
         CategorizedProductRoutes(categorizedProductService);
