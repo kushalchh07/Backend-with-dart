@@ -9,11 +9,13 @@ class ProductService {
   // Add a new product to the database
   Future<Product> addProduct(Product product) async {
     final result = await connection.query(
-      'INSERT INTO products (category_id, brand_id, product_name, product_description, product_thumbnail, normal_price, sell_price, total_product_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO products (category_id, brand_id, product_name, category_name, brand_name, product_description, product_thumbnail, normal_price, sell_price, total_product_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?)',
       [
         product.categoryId,
         product.brandId,
         product.productName,
+        product.categoryName,
+        product.brandName,
         product.productDescription,
         product.productThumbnail,
         product.normalPrice,
@@ -27,6 +29,8 @@ class ProductService {
       categoryId: product.categoryId,
       brandId: product.brandId,
       productName: product.productName,
+      categoryName: product.categoryName,
+      brandName: product.brandName,
       productDescription: product.productDescription,
       productThumbnail: product.productThumbnail,
       normalPrice: product.normalPrice,

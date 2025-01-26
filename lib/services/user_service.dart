@@ -3,71 +3,69 @@ import 'package:mysql1/mysql1.dart';
 import '../models/user_model.dart';
 import 'package:bcrypt/bcrypt.dart';
 
-
 class UserService {
   final MySqlConnection connection;
 
   UserService(this.connection);
 
   // Register a new user
-Future<User> registerUser(User user) async {
-  // Hash the password
-  final hashedPassword = BCrypt.hashpw(user.password, BCrypt.gensalt());
+  Future<User> registerUser(User user) async {
+    // Hash the password
+    final hashedPassword = BCrypt.hashpw(user.password, BCrypt.gensalt());
 
-  final result = await connection.query(
-    '''INSERT INTO users (fullname, email_address, contact_number, password, otp, email_verified) 
+    final result = await connection.query(
+      '''INSERT INTO users (fullname, email_address, contact_number, password, otp, email_verified) 
     VALUES (?, ?, ?, ?, ?, ?)''',
-    [
-      user.fullname,
-      user.emailAddress,
-      user.contactNumber,
-      hashedPassword, // Store the hashed password
-      user.otp,
-      user.emailVerified
-    ],
-  );
+      [
+        user.fullname,
+        user.emailAddress,
+        user.contactNumber,
+        hashedPassword, // Store the hashed password
+        user.otp,
+        user.emailVerified
+      ],
+    );
 
-  return User(
-    userId: result.insertId ?? 0,
-    fullname: user.fullname,
-    emailAddress: user.emailAddress,
-    contactNumber: user.contactNumber,
-    password: '', // Don't return the password
-    otp: user.otp,
-    emailVerified: user.emailVerified,
-  );
-}
+    return User(
+      userId: result.insertId ?? 0,
+      fullname: user.fullname,
+      emailAddress: user.emailAddress,
+      contactNumber: user.contactNumber,
+      password: '', // Don't return the password
+      otp: user.otp,
+      emailVerified: user.emailVerified,
+    );
+  }
 
   // Login user
-Future<User?> loginUser(String emailAddress, String password) async {
-  final result = await connection.query(
-    'SELECT * FROM users WHERE email_address = ?',
-    [emailAddress],
-  );
+  Future<User?> loginUser(String emailAddress, String password) async {
+    final result = await connection.query(
+      'SELECT * FROM users WHERE email_address = ?',
+      [emailAddress],
+    );
 
-  if (result.isEmpty) {
-    return null; // User not found
+    if (result.isEmpty) {
+      return null; // User not found
+    }
+
+    final userRow = result.first;
+    final hashedPassword = userRow['password'];
+
+    // Compare the plain-text password with the hashed password
+    if (!BCrypt.checkpw(password, hashedPassword)) {
+      return null; // Password does not match
+    }
+
+    return User(
+      userId: userRow['user_id'],
+      fullname: userRow['fullname'],
+      emailAddress: userRow['email_address'],
+      contactNumber: userRow['contact_number'],
+      password: '', // Don't return the password
+      otp: userRow['otp'],
+      emailVerified: userRow['email_verified'] == 1,
+    );
   }
-
-  final userRow = result.first;
-  final hashedPassword = userRow['password'];
-
-  // Compare the plain-text password with the hashed password
-  if (!BCrypt.checkpw(password, hashedPassword)) {
-    return null; // Password does not match
-  }
-
-  return User(
-    userId: userRow['id'],
-    fullname: userRow['fullname'],
-    emailAddress: userRow['email_address'],
-    contactNumber: userRow['contact_number'],
-    password: '', // Don't return the password
-    otp: '',
-    emailVerified: userRow['email_verified'] == 1,
-  );
-}
-
 
   // Update user profile
   Future<void> updateProfile(User user) async {
@@ -135,36 +133,36 @@ Future<User?> loginUser(String emailAddress, String password) async {
   }
 
   // Change password
-Future<bool> changePassword(int userId, String oldPassword, String newPassword) async {
-  // Fetch the user's current password
-  final result = await connection.query(
-    'SELECT password FROM users WHERE id = ?',
-    [userId],
-  );
+  Future<bool> changePassword(
+      int userId, String oldPassword, String newPassword) async {
+    // Fetch the user's current password
+    final result = await connection.query(
+      'SELECT password FROM users WHERE user_id = ?',
+      [userId],
+    );
 
-  if (result.isEmpty) {
-    throw Exception('User not found');
+    if (result.isEmpty) {
+      throw Exception('User not found');
+    }
+
+    final currentPassword = result.first['password'];
+
+    // Compare the old password with the stored password
+    if (!BCrypt.checkpw(oldPassword, currentPassword)) {
+      return false; // Old password does not match
+    }
+
+    // Hash the new password
+    final hashedNewPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+
+    // Update to the new password
+    await connection.query(
+      'UPDATE users SET password = ? WHERE user_id = ?',
+      [hashedNewPassword, userId],
+    );
+
+    return true; // Password updated successfully
   }
-
-  final currentPassword = result.first['password'];
-
-  // Compare the old password with the stored password
-  if (!BCrypt.checkpw(oldPassword, currentPassword)) {
-    return false; // Old password does not match
-  }
-
-  // Hash the new password
-  final hashedNewPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
-
-  // Update to the new password
-  await connection.query(
-    'UPDATE users SET password = ? WHERE id = ?',
-    [hashedNewPassword, userId],
-  );
-
-  return true; // Password updated successfully
-}
-
 
   // Handle forgot password
   Future<void> updatePasswordWithOtp(

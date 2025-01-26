@@ -23,13 +23,16 @@ class ProductRoutes {
           categoryId: data['category_id'],
           brandId: data['brand_id'],
           productName: data['product_name'],
+          categoryName: data['category_name'],
+          brandName: data['brand_name'],
           productDescription: data['product_description'],
           productThumbnail: data['product_thumbnail'],
           normalPrice: data['normal_price'],
           sellPrice: data['sell_price'],
           totalProductCount: data['total_product_count'],
+          
         );
-
+ print('Attempting to add product: $data'); // Log incoming data
         final addedProduct = await productService.addProduct(product);
 
         return Response.ok(jsonEncode({
@@ -38,6 +41,7 @@ class ProductRoutes {
           'product': addedProduct.toMap(),
         }));
       } catch (e) {
+         print('Error adding product: $e');
         return Response(500,
             body: jsonEncode({
               'status': false,

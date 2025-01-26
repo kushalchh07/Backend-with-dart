@@ -20,15 +20,28 @@ import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
 import 'dart:io';
 
-// CORS Middleware
+// Enhanced CORS Middleware
 Middleware corsHeaders() {
   return (Handler handler) {
     return (Request request) async {
+      if (request.method == 'OPTIONS') {
+        // Handle preflight OPTIONS requests
+        return Response.ok(
+          '',
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers':
+                'Origin, Content-Type, Authorization',
+          },
+        );
+      }
+
       final response = await handler(request);
       return response.change(headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Origin, Content-Type',
+        'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization',
       });
     };
   };
@@ -49,6 +62,7 @@ Future<void> main() async {
     final flashSaleProductService = FlashSaleProductService(connection);
     final cartService = CartService(connection);
     final wishlistService = WishlistService(connection);
+
     // Initialize routes
     final authRoutes = UserRoutes(userService);
     final categoryRoutes = CategoryRoutes(categoryService);
@@ -70,17 +84,16 @@ Future<void> main() async {
     app.mount('/api/products/', productRoutes.router);
     app.mount('/api/flash-sale-products/', flashSaleProductRoutes.router);
     app.mount('/api/carts/', cartRoutes.router);
-    app.mount(
-        '/api/wishlists/', wishlistRoutes.router); // Mount category routes
+    app.mount('/api/wishlists/', wishlistRoutes.router);
 
     // Create a pipeline with middlewares
     final handler = Pipeline()
         .addMiddleware(logRequests())
-        .addMiddleware(corsHeaders()) // Add CORS middleware
+        .addMiddleware(corsHeaders()) // Add enhanced CORS middleware
         .addHandler(app);
 
     // Start the server
-    final server = await io.serve(handler, '0.0.0.0', 8080);
+    final server = await io.serve(handler, '0.0.0.0', 8081);
     print('Server running on http://${server.address.host}:${server.port}');
 
     // Handle application shutdown signals

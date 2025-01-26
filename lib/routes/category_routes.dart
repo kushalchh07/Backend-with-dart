@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:mime/mime.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import '../models/categories_model.dart';
@@ -13,31 +15,54 @@ class CategoryRoutes {
     final router = Router();
 
     // Add a new category
-    router.post('/add', (Request request) async {
-      try {
-        final payload = await request.readAsString();
-        final data = jsonDecode(payload);
+router.post('/add', (Request request) async {
+  try {
+    // Read and decode the request body
+    final payload = await request.readAsString();
+    final data = jsonDecode(payload) as Map<String, dynamic>;
 
-        final category = Category(
-          categoryName: data['category_name'],
-          categoryThumbnail: data['category_thumbnail'], // Can be null
-          categoryDescription: data['category_description'], // Can be null
-        );
+    // Validate input fields
+    final categoryName = data['category_name']?.trim();
+    final thumbnailUrl = data['thumbnail_url']?.trim();
+    final categoryDescription = data['category_description']?.trim();
 
-        final addedCategory = await categoryService.addCategory(category);
-
-        return Response.ok(jsonEncode({
-          'status': true,
-          'message': 'Category added successfully',
-          'category': addedCategory.toMap(),
-        }));
-      } catch (e) {
-        return Response(500, body: jsonEncode({
+    if (categoryName == null || categoryName.isEmpty) {
+      return Response(
+        400,
+        body: jsonEncode({
           'status': false,
-          'message': 'Failed to add category: ${e.toString()}',
-        }));
-      }
-    });
+          'message': 'Category name is required',
+        }),
+      );
+    }
+
+    // Create a category object
+    final category = Category(
+      categoryName: categoryName,
+      categoryThumbnail: thumbnailUrl,
+      categoryDescription: categoryDescription,
+    );
+
+    // Add the category to the database
+    final addedCategory = await categoryService.addCategory(category);
+
+    // Respond with the added category
+    return Response.ok(jsonEncode({
+      'status': true,
+      'message': 'Category added successfully',
+      'category': addedCategory.toMap(),
+    }));
+  } catch (e) {
+    // Catch and respond with error
+    return Response(
+      500,
+      body: jsonEncode({
+        'status': false,
+        'message': 'Failed to add category: ${e.toString()}',
+      }),
+    );
+  }
+});
 
     // Retrieve all categories
     router.get('/all', (Request request) async {
@@ -48,10 +73,11 @@ class CategoryRoutes {
           'categories': categories.map((cat) => cat.toMap()).toList(),
         }));
       } catch (e) {
-        return Response(500, body: jsonEncode({
-          'status': false,
-          'message': 'Failed to fetch categories: ${e.toString()}',
-        }));
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to fetch categories: ${e.toString()}',
+            }));
       }
     });
 
@@ -62,10 +88,11 @@ class CategoryRoutes {
         final category = await categoryService.getCategoryById(categoryId);
 
         if (category == null) {
-          return Response(404, body: jsonEncode({
-            'status': false,
-            'message': 'Category not found',
-          }));
+          return Response(404,
+              body: jsonEncode({
+                'status': false,
+                'message': 'Category not found',
+              }));
         }
 
         return Response.ok(jsonEncode({
@@ -73,10 +100,11 @@ class CategoryRoutes {
           'category': category.toMap(),
         }));
       } catch (e) {
-        return Response(500, body: jsonEncode({
-          'status': false,
-          'message': 'Failed to fetch category: ${e.toString()}',
-        }));
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to fetch category: ${e.toString()}',
+            }));
       }
     });
 

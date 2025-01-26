@@ -3,10 +3,12 @@ class Product {
   final int categoryId;
   final int brandId;
   final String productName;
+  final String categoryName;
+  final String brandName;
   final String? productDescription;
   final String? productThumbnail;
-  final double normalPrice;
-  final double sellPrice;
+  final dynamic normalPrice;
+  final dynamic sellPrice;
   final int totalProductCount;
 
   Product({
@@ -14,6 +16,8 @@ class Product {
     required this.categoryId,
     required this.brandId,
     required this.productName,
+    required this.categoryName,
+    required this.brandName,
     this.productDescription,
     this.productThumbnail,
     required this.normalPrice,
@@ -28,6 +32,8 @@ class Product {
       'category_id': categoryId,
       'brand_id': brandId,
       'product_name': productName,
+      'category_name': categoryName,
+      'brand_name': brandName,
       'product_description': productDescription,
       'product_thumbnail': productThumbnail,
       'normal_price': normalPrice,
@@ -43,6 +49,8 @@ class Product {
       categoryId: map['category_id'],
       brandId: map['brand_id'],
       productName: map['product_name'],
+      categoryName: map['category_name'],
+      brandName: map['brand_name'],
       productDescription: map['product_description'],
       productThumbnail: map['product_thumbnail'],
       normalPrice: map['normal_price'],

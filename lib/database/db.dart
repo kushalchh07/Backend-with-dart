@@ -10,7 +10,7 @@ class Database {
         host: 'localhost',
         port: 3306,
         user: 'root',
-        password: 'pranita', // Replace with your database password
+        password: '', // Replace with your database password
         db: 'pranshal_ecommerce', // Replace with your database name
       );
 
@@ -63,8 +63,8 @@ class Database {
         CREATE TABLE IF NOT EXISTS categories (
           category_id INT AUTO_INCREMENT PRIMARY KEY,
           category_name VARCHAR(255) NOT NULL,
-          category_thumbnail TEXT,
-          category_description TEXT,
+          category_thumbnail VARCHAR(255),
+          category_description VARCHAR(255),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         );
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS categorized_products (
 
 
 ''');
-      // we are using varchar (500) for address because it produced blob error when we try to store address as text similarly for thumbnail
+      // we are using varchar (500) for address because it produced blob error when we try to store address as VARCHAR(255) similarly for thumbnail
       print('Ensured "categorized_products" table exists.');
       await connection.query('''
   CREATE TABLE IF NOT EXISTS brands (
@@ -109,6 +109,8 @@ CREATE TABLE IF NOT EXISTS categorized_products (
     category_id INT NOT NULL,
     brand_id INT NOT NULL,
     product_name VARCHAR(255) NOT NULL,
+     category_name VARCHAR(255) NOT NULL,
+    brand_name VARCHAR(255) NOT NULL,
     product_description VARCHAR(500),
     product_thumbnail VARCHAR(500),
     normal_price DECIMAL(10, 2) NOT NULL,
@@ -138,6 +140,8 @@ CREATE TABLE IF NOT EXISTS categorized_products (
     discounted_price DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    category_name VARCHAR(255) NOT NULL,
+    brand_name VARCHAR(255) NOT NULL,
     FOREIGN KEY (product_id) REFERENCES products(product_id),
     FOREIGN KEY (category_id) REFERENCES categories(category_id),
     FOREIGN KEY (brand_id) REFERENCES brands(brand_id)
