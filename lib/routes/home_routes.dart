@@ -18,7 +18,7 @@ class HomeRoutes {
         final categories = await homeService.fetchCategories();
         final brands = await homeService.fetchBrands();
         final products = await homeService.fetchProducts();
-
+        final flashSaleProducts = await homeService.fetchflashsaleProducts();
         // Combine data into a single response
         return Response.ok(
           jsonEncode({
@@ -26,6 +26,7 @@ class HomeRoutes {
             'categories': categories,
             'brands': brands,
             'products': products,
+            'flashSaleProducts': flashSaleProducts,
           }),
           headers: {'Content-Type': 'application/json'},
         );

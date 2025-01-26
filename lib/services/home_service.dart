@@ -50,4 +50,22 @@ class HomeService {
             })
         .toList();
   }
+  Future<List<Map<String, dynamic>>> fetchflashsaleProducts() async {
+    final products = await connection.query('SELECT * FROM flash_sale_products');
+    return products
+        .map((product) => {
+              'product_id': product['product_id'],
+              'category_id': product['category_id'],
+              'brand_id': product['brand_id'],
+              'product_name': product['product_name'],
+              'category_name': product['category_name'],
+              'brand_name': product['brand_name'],
+              'product_description': product['product_description'],
+              'product_thumbnail': product['product_thumbnail'],
+              'normal_price': product['normal_price'],
+              'sell_price': product['sell_price'],
+              'total_product_count': product['total_product_count'],
+            })
+        .toList();
+  }
 }
