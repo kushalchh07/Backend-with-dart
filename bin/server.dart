@@ -2,6 +2,7 @@ import 'package:pranshal_cms/database/db.dart';
 import 'package:pranshal_cms/routes/brands_routes.dart';
 import 'package:pranshal_cms/routes/cart_routes.dart';
 import 'package:pranshal_cms/routes/flash_sales_product_routes.dart';
+import 'package:pranshal_cms/routes/home_routes.dart';
 import 'package:pranshal_cms/routes/product_category_routes.dart';
 import 'package:pranshal_cms/routes/product_routes.dart';
 import 'package:pranshal_cms/routes/user_routes.dart';
@@ -10,6 +11,7 @@ import 'package:pranshal_cms/routes/wishlist_routes.dart';
 import 'package:pranshal_cms/services/brands_service.dart';
 import 'package:pranshal_cms/services/cart_service.dart';
 import 'package:pranshal_cms/services/flash_sale_service.dart';
+import 'package:pranshal_cms/services/home_service.dart';
 import 'package:pranshal_cms/services/product_category_service.dart';
 import 'package:pranshal_cms/services/product_service.dart';
 import 'package:pranshal_cms/services/user_service.dart';
@@ -62,7 +64,7 @@ Future<void> main() async {
     final flashSaleProductService = FlashSaleProductService(connection);
     final cartService = CartService(connection);
     final wishlistService = WishlistService(connection);
-
+    final homeService = HomeService(connection);
     // Initialize routes
     final authRoutes = UserRoutes(userService);
     final categoryRoutes = CategoryRoutes(categoryService);
@@ -74,10 +76,11 @@ Future<void> main() async {
         FlashSaleProductRoutes(flashSaleProductService);
     final cartRoutes = CartRoutes(cartService);
     final wishlistRoutes = WishlistRoutes(wishlistService);
-
+    final homeRoutes = HomeRoutes(homeService);
     // Create router and mount routes
     final app = Router();
     app.mount('/api/auth/', authRoutes.router);
+    app.mount('/api/', homeRoutes.router);
     app.mount('/api/categories/', categoryRoutes.router);
     app.mount('/api/categorizedproducts/', categorizedProductRoutes.router);
     app.mount('/api/brands/', brandRoutes.router);

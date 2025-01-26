@@ -10,7 +10,7 @@ class Database {
         host: 'localhost',
         port: 3306,
         user: 'root',
-        password: '', // Replace with your database password
+        password: 'pranita', // Replace with your database password
         db: 'pranshal_ecommerce', // Replace with your database name
       );
 
