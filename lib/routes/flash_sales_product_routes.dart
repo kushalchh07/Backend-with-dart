@@ -26,6 +26,8 @@ class FlashSaleProductRoutes {
           categoryId: data['category_id'],
           brandId: data['brand_id'],
           productName: data['product_name'],
+          categoryName: data['category_name'],
+          brandName: data['brand_name'],
           productDescription: data['product_description'],
           productThumbnail: data['product_thumbnail'],
           normalPrice: data['normal_price'],

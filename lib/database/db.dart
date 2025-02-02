@@ -131,6 +131,8 @@ CREATE TABLE IF NOT EXISTS categorized_products (
     category_id INT NOT NULL,
     brand_id INT NOT NULL,
     product_name VARCHAR(255) NOT NULL,
+     category_name VARCHAR(255) NOT NULL,
+    brand_name VARCHAR(255) NOT NULL,
     product_description VARCHAR(500),
     product_thumbnail VARCHAR(500),
     normal_price DECIMAL(10, 2) NOT NULL,
@@ -140,8 +142,7 @@ CREATE TABLE IF NOT EXISTS categorized_products (
     discounted_price DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    category_name VARCHAR(255) NOT NULL,
-    brand_name VARCHAR(255) NOT NULL,
+   
     FOREIGN KEY (product_id) REFERENCES products(product_id),
     FOREIGN KEY (category_id) REFERENCES categories(category_id),
     FOREIGN KEY (brand_id) REFERENCES brands(brand_id)

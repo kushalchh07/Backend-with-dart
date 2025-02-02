@@ -11,13 +11,15 @@ class FlashSaleProductService {
   Future<FlashSaleProduct> addFlashSaleProduct(FlashSaleProduct flashSaleProduct) async {
     final result = await connection.query(
       '''INSERT INTO flash_sale_products 
-      (product_id, category_id, brand_id, product_name, product_description, product_thumbnail, normal_price, sell_price, total_product_count, discount_percentage, discounted_price) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+      (product_id, category_id, brand_id, product_name,category_name, brand_name, product_description, product_thumbnail, normal_price, sell_price, total_product_count, discount_percentage, discounted_price) 
+      VALUES (?, ?, ?, ?,?,?, ?, ?, ?, ?, ?, ?, ?)''',
       [
         flashSaleProduct.productId,
         flashSaleProduct.categoryId,
         flashSaleProduct.brandId,
         flashSaleProduct.productName,
+        flashSaleProduct.categoryName,
+        flashSaleProduct.brandName,
         flashSaleProduct.productDescription,
         flashSaleProduct.productThumbnail,
         flashSaleProduct.normalPrice,
@@ -34,6 +36,8 @@ class FlashSaleProductService {
       categoryId: flashSaleProduct.categoryId,
       brandId: flashSaleProduct.brandId,
       productName: flashSaleProduct.productName,
+      categoryName: flashSaleProduct.categoryName,
+      brandName: flashSaleProduct.brandName,
       productDescription: flashSaleProduct.productDescription,
       productThumbnail: flashSaleProduct.productThumbnail,
       normalPrice: flashSaleProduct.normalPrice,

@@ -4,13 +4,15 @@ class FlashSaleProduct {
   final int categoryId;
   final int brandId;
   final String productName;
+  final String categoryName;
+  final String brandName;
   final String? productDescription;
   final String? productThumbnail;
-  final double normalPrice;
-  final double sellPrice;
-  final int totalProductCount;
-  final double discountPercentage;
-  final double discountedPrice;
+  final dynamic normalPrice;
+  final dynamic sellPrice;
+  final dynamic totalProductCount;
+  final dynamic discountPercentage;
+  final dynamic discountedPrice;
 
   FlashSaleProduct({
     this.flashSaleId,
@@ -18,6 +20,8 @@ class FlashSaleProduct {
     required this.categoryId,
     required this.brandId,
     required this.productName,
+    required this.categoryName,
+    required this.brandName,
     this.productDescription,
     this.productThumbnail,
     required this.normalPrice,
@@ -35,6 +39,8 @@ class FlashSaleProduct {
       'category_id': categoryId,
       'brand_id': brandId,
       'product_name': productName,
+      'category_name': categoryName,
+      'brand_name': brandName,
       'product_description': productDescription,
       'product_thumbnail': productThumbnail,
       'normal_price': normalPrice,
@@ -53,6 +59,8 @@ class FlashSaleProduct {
       categoryId: map['category_id'],
       brandId: map['brand_id'],
       productName: map['product_name'],
+      categoryName: map['category_name'],
+      brandName: map['brand_name'],
       productDescription: map['product_description'],
       productThumbnail: map['product_thumbnail'],
       normalPrice: map['normal_price'],
