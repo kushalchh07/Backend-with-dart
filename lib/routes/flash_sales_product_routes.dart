@@ -5,8 +5,6 @@ import 'package:shelf_router/shelf_router.dart';
 import '../models/flash_sale_products_model.dart';
 import '../services/flash_sale_service.dart';
 
-
-
 class FlashSaleProductRoutes {
   final FlashSaleProductService flashSaleProductService;
 
@@ -70,6 +68,33 @@ class FlashSaleProductRoutes {
             body: jsonEncode({
               'status': false,
               'message': 'Failed to fetch flash sale products: ${e.toString()}',
+            }));
+      }
+    });
+    router.delete('/delete/<flashSaleId>',
+        (Request request, String flashSaleId) async {
+      try {
+        final int id = int.parse(flashSaleId);
+        final bool isDeleted = await flashSaleProductService.deleteCategory(id);
+
+        if (isDeleted) {
+          return Response.ok(jsonEncode({
+            'status': true,
+            'message': 'Flash Sale Product  deleted successfully',
+          }));
+        } else {
+          return Response(404,
+              body: jsonEncode({
+                'status': false,
+                'message': 'Flash Sale Product  not found',
+              }));
+        }
+      } catch (e) {
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message':
+                  'Failed to delete Flash Sale Product : ${e.toString()}',
             }));
       }
     });

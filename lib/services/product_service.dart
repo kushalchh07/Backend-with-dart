@@ -62,4 +62,36 @@ class ProductService {
     );
     return results.map((row) => Product.fromMap(row.fields)).toList();
   }
+
+  // delet a product from the database.
+  Future<bool> deleteProduct(int productId) async {
+    try {
+      // Start a transaction to ensure data consistency
+      await connection.transaction((ctx) async {
+        // Delete dependent rows in flash_sale_products first
+        await ctx.query(
+          'DELETE FROM flash_sale_products WHERE product_id = ?',
+          [productId],
+        );
+
+        // Delete the product from products
+        final result = await ctx.query(
+          'DELETE FROM products WHERE product_id = ?',
+          [productId],
+        );
+
+        // Check if the product was deleted
+        if (result.affectedRows! > 0) {
+          print('Product deleted successfully');
+        } else {
+          print('Product not found or already deleted');
+        }
+      });
+
+      return true; // Success
+    } catch (e) {
+      print('Failed to delete product: $e');
+      return false; // Failure
+    }
+  }
 }

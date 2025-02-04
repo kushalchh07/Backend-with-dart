@@ -40,4 +40,14 @@ class BrandService {
 
     return Brand.fromMap(results.first.fields);
   }
+    // Delete a brand by ID
+  Future<bool> deleteBrand(int brandId) async {
+    final result = await connection.query(
+      'DELETE FROM brands WHERE brand_id = ?',
+      [brandId],
+    );
+
+    return result.affectedRows! > 0; // Returns true if a row was deleted
+  }
+
 }

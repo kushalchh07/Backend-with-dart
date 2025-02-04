@@ -15,54 +15,54 @@ class CategoryRoutes {
     final router = Router();
 
     // Add a new category
-router.post('/add', (Request request) async {
-  try {
-    // Read and decode the request body
-    final payload = await request.readAsString();
-    final data = jsonDecode(payload) as Map<String, dynamic>;
+    router.post('/add', (Request request) async {
+      try {
+        // Read and decode the request body
+        final payload = await request.readAsString();
+        final data = jsonDecode(payload) as Map<String, dynamic>;
 
-    // Validate input fields
-    final categoryName = data['category_name']?.trim();
-    final thumbnailUrl = data['thumbnail_url']?.trim();
-    final categoryDescription = data['category_description']?.trim();
+        // Validate input fields
+        final categoryName = data['category_name']?.trim();
+        final thumbnailUrl = data['thumbnail_url']?.trim();
+        final categoryDescription = data['category_description']?.trim();
 
-    if (categoryName == null || categoryName.isEmpty) {
-      return Response(
-        400,
-        body: jsonEncode({
-          'status': false,
-          'message': 'Category name is required',
-        }),
-      );
-    }
+        if (categoryName == null || categoryName.isEmpty) {
+          return Response(
+            400,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Category name is required',
+            }),
+          );
+        }
 
-    // Create a category object
-    final category = Category(
-      categoryName: categoryName,
-      categoryThumbnail: thumbnailUrl,
-      categoryDescription: categoryDescription,
-    );
+        // Create a category object
+        final category = Category(
+          categoryName: categoryName,
+          categoryThumbnail: thumbnailUrl,
+          categoryDescription: categoryDescription,
+        );
 
-    // Add the category to the database
-    final addedCategory = await categoryService.addCategory(category);
+        // Add the category to the database
+        final addedCategory = await categoryService.addCategory(category);
 
-    // Respond with the added category
-    return Response.ok(jsonEncode({
-      'status': true,
-      'message': 'Category added successfully',
-      'category': addedCategory.toMap(),
-    }));
-  } catch (e) {
-    // Catch and respond with error
-    return Response(
-      500,
-      body: jsonEncode({
-        'status': false,
-        'message': 'Failed to add category: ${e.toString()}',
-      }),
-    );
-  }
-});
+        // Respond with the added category
+        return Response.ok(jsonEncode({
+          'status': true,
+          'message': 'Category added successfully',
+          'category': addedCategory.toMap(),
+        }));
+      } catch (e) {
+        // Catch and respond with error
+        return Response(
+          500,
+          body: jsonEncode({
+            'status': false,
+            'message': 'Failed to add category: ${e.toString()}',
+          }),
+        );
+      }
+    });
 
     // Retrieve all categories
     router.get('/all', (Request request) async {
@@ -107,7 +107,32 @@ router.post('/add', (Request request) async {
             }));
       }
     });
+    router.delete('/delete/<categoryId>',
+        (Request request, String categoryId) async {
+      try {
+        final int id = int.parse(categoryId);
+        final bool isDeleted = await categoryService.deleteCategory(id);
 
+        if (isDeleted) {
+          return Response.ok(jsonEncode({
+            'status': true,
+            'message': 'Category deleted successfully',
+          }));
+        } else {
+          return Response(404,
+              body: jsonEncode({
+                'status': false,
+                'message': 'Category not found',
+              }));
+        }
+      } catch (e) {
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to delete Category: ${e.toString()}',
+            }));
+      }
+    });
     return router;
   }
 }

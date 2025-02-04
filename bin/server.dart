@@ -96,7 +96,7 @@ Future<void> main() async {
         .addHandler(app);
 
     // Start the server
-    final server = await io.serve(handler, '0.0.0.0', 8081);
+    final server = await io.serve(handler, '0.0.0.0', 8080);
     print('Server running on http://${server.address.host}:${server.port}');
 
     // Handle application shutdown signals

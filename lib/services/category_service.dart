@@ -44,4 +44,12 @@ class CategoryService {
 
     return Category.fromMap(results.first.fields);
   }
+   Future<bool> deleteCategory(int categoryId) async {
+    final result = await connection.query(
+      'DELETE FROM brands WHERE category_id = ?',
+      [categoryId],
+    );
+
+    return result.affectedRows! > 0; // Returns true if a row was deleted
+  }
 }

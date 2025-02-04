@@ -23,6 +23,8 @@ dependencies:
   mailer: ^6.3.0
   shelf_multipart: ^2.0.0
   mime: ^1.0.6
+  flutter_bloc: ^9.0.0
+  bloc: ^9.0.0
   # path: ^1.8.0
 
 dev_dependencies:

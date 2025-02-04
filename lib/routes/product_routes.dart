@@ -30,9 +30,8 @@ class ProductRoutes {
           normalPrice: data['normal_price'],
           sellPrice: data['sell_price'],
           totalProductCount: data['total_product_count'],
-          
         );
- print('Attempting to add product: $data'); // Log incoming data
+        print('Attempting to add product: $data'); // Log incoming data
         final addedProduct = await productService.addProduct(product);
 
         return Response.ok(jsonEncode({
@@ -41,7 +40,7 @@ class ProductRoutes {
           'product': addedProduct.toMap(),
         }));
       } catch (e) {
-         print('Error adding product: $e');
+        print('Error adding product: $e');
         return Response(500,
             body: jsonEncode({
               'status': false,
@@ -72,7 +71,8 @@ class ProductRoutes {
     router.get('/category/<id|[0-9]+>', (Request request, String id) async {
       try {
         final categoryId = int.parse(id);
-        final products = await productService.getProductsByCategoryId(categoryId);
+        final products =
+            await productService.getProductsByCategoryId(categoryId);
 
         return Response.ok(jsonEncode({
           'status': true,
@@ -105,7 +105,24 @@ class ProductRoutes {
             }));
       }
     });
-
+//route to delete product
+    router.delete('/delete/<id|[0-9]+>', (Request request, String id) async {
+      try {
+        final productId = int.parse(id);
+        final deleted = await productService.deleteProduct(productId);
+        return Response.ok(jsonEncode({
+          'status': true,
+          'message': 'Product deleted successfully',
+          'deleted': deleted,
+        }));
+      } catch (e) {
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to delete product: ${e.toString()}',
+            }));
+      }
+    });
     return router;
   }
 }

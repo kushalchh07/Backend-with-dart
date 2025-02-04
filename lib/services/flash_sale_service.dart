@@ -53,4 +53,12 @@ class FlashSaleProductService {
     final results = await connection.query('SELECT * FROM flash_sale_products');
     return results.map((row) => FlashSaleProduct.fromMap(row.fields)).toList();
   }
+   Future<bool> deleteCategory(int flashSaleId) async {
+    final result = await connection.query(
+      'DELETE FROM brands WHERE flash_sale_id = ?',
+      [flashSaleId],
+    );
+
+    return result.affectedRows! > 0; // Returns true if a row was deleted
+  }
 }

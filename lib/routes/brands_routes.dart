@@ -85,6 +85,29 @@ class BrandRoutes {
             }));
       }
     });
+    router.delete('/delete/<brandId>', (Request request, String brandId) async {
+  try {
+    final int id = int.parse(brandId);
+    final bool isDeleted = await brandService.deleteBrand(id);
+
+    if (isDeleted) {
+      return Response.ok(jsonEncode({
+        'status': true,
+        'message': 'Brand deleted successfully',
+      }));
+    } else {
+      return Response(404, body: jsonEncode({
+        'status': false,
+        'message': 'Brand not found',
+      }));
+    }
+  } catch (e) {
+    return Response(500, body: jsonEncode({
+      'status': false,
+      'message': 'Failed to delete brand: ${e.toString()}',
+    }));
+  }
+});
 
     return router;
   }
