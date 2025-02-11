@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:mysql1/mysql1.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
@@ -8,8 +9,8 @@ import '../services/product_service.dart';
 class ProductRoutes {
   final ProductService productService;
 
-  ProductRoutes(this.productService);
-
+  ProductRoutes(this.productService, this.connection);
+  final MySqlConnection connection;
   Router get router {
     final router = Router();
 
@@ -123,6 +124,104 @@ class ProductRoutes {
             }));
       }
     });
+
+    router.get('/recommendations/<userId>',
+        (Request request, String userId) async {
+      try {
+        final int id = int.parse(userId);
+        print("Fetching recommendations for User ID: $id");
+
+        // Step 1: Get Recently Viewed Product IDs
+        final viewedResults = await connection.query(
+            'SELECT product_id FROM user_activity WHERE user_id = ? AND action_type = "view" ORDER BY timestamp DESC LIMIT 5',
+            [id]);
+
+        List<int> productIds =
+            viewedResults.map((row) => row['product_id'] as int).toList();
+        print("Recently Viewed Products: $productIds");
+
+        List<Map<String, dynamic>> recommendedProducts = [];
+
+        if (productIds.isEmpty) {
+          // No viewing history? Return trending products instead
+          print("User has no history, returning trending products.");
+          recommendedProducts = await productService.getTrendingProducts();
+        } else {
+          // Step 2: Get Categories of Viewed Products
+          String placeholders = List.filled(productIds.length, '?').join(',');
+          final categoryResults = await connection.query(
+              'SELECT DISTINCT category_id FROM products WHERE product_id IN ($placeholders)',
+              productIds);
+
+          List<int> categoryIds =
+              categoryResults.map((row) => row['category_id'] as int).toList();
+          print("Related Categories: $categoryIds");
+
+          if (categoryIds.isNotEmpty) {
+            // Step 3: Get Products from Those Categories
+            String categoryPlaceholders =
+                List.filled(categoryIds.length, '?').join(',');
+            final recommendedResults = await connection.query(
+                'SELECT * FROM products WHERE category_id IN ($categoryPlaceholders) LIMIT 10',
+                categoryIds);
+
+            recommendedProducts = recommendedResults.map((row) {
+              final fields = row.fields;
+              return fields.map((key, value) {
+                if (value is DateTime) {
+                  return MapEntry(key,
+                      value.toIso8601String()); // Convert DateTime to String
+                }
+                return MapEntry(key, value);
+              });
+            }).toList();
+          }
+        }
+
+        print("Recommended Products: ${recommendedProducts.length}");
+        return Response.ok(
+            jsonEncode({
+              'status': true,
+              'recommended_products': recommendedProducts,
+            }),
+            headers: {'Content-Type': 'application/json'});
+      } catch (e) {
+        print("Error fetching recommendations: $e");
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to fetch recommendations: ${e.toString()}',
+            }),
+            headers: {'Content-Type': 'application/json'});
+      }
+    });
+    // Route for searching products
+    router.get('/search/products/<query>',
+        (Request request, String query) async {
+      try {
+        // Perform full-text search on product name and description
+        final results = await connection.query(
+            'SELECT * FROM products WHERE MATCH(product_name, product_description) AGAINST(? IN NATURAL LANGUAGE MODE) LIMIT 10',
+            [query]);
+        // Convert result to a list of Product objects
+        final products =
+            results.map((row) => Product.fromMap(row.fields)).toList();
+
+        return Response.ok(jsonEncode({
+          'status': true,
+          'products': products
+              .map((p) => p.toMap())
+              .toList(), // ✅ Convert to Map instead of JSON string
+        }));
+      } catch (e) {
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to fetch products: ${e.toString()}',
+            }));
+      }
+    });
+
     return router;
   }
 }

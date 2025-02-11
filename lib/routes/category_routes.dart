@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:mime/mime.dart';
+import 'package:mysql1/mysql1.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import '../models/categories_model.dart';
@@ -8,8 +9,9 @@ import '../services/category_service.dart';
 
 class CategoryRoutes {
   final CategoryService categoryService;
+  final MySqlConnection connection;
 
-  CategoryRoutes(this.categoryService);
+  CategoryRoutes(this.categoryService, this.connection);
 
   Router get router {
     final router = Router();
@@ -133,6 +135,65 @@ class CategoryRoutes {
             }));
       }
     });
+    //delete category
+    router.delete('/delete/<category_id>',
+        (Request request, String categoryId) async {
+      try {
+        final int id = int.parse(categoryId);
+        final bool isDeleted = await categoryService.deleteCategory(id);
+
+        if (isDeleted) {
+          return Response.ok(jsonEncode({
+            'status': true,
+            'message': 'Category  deleted successfully',
+          }));
+        } else {
+          return Response(404,
+              body: jsonEncode({
+                'status': false,
+                'message': 'Category Product  not found',
+              }));
+        }
+      } catch (e) {
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to delete category : ${e.toString()}',
+            }));
+      }
+    });
+
+    // Route for searching categories
+    router.get('/search/categories/<query>',
+        (Request request, String query) async {
+      try {
+        // Perform full-text search on category name and description
+        final results = await connection.query(
+            'SELECT * FROM categories WHERE MATCH(category_name, category_description) AGAINST(? IN NATURAL LANGUAGE MODE) LIMIT 10',
+            [query]);
+
+        final categories = results.map((row) {
+          return {
+            'category_id': row['category_id'],
+            'category_name': row['category_name'],
+            'category_description': row['category_description'],
+            'category_thumbnail': row['category_thumbnail'],
+          };
+        }).toList();
+
+        return Response.ok(jsonEncode({
+          'status': true,
+          'categories': categories,
+        }));
+      } catch (e) {
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to fetch categories: ${e.toString()}',
+            }));
+      }
+    });
+
     return router;
   }
 }

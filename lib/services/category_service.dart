@@ -46,7 +46,7 @@ class CategoryService {
   }
    Future<bool> deleteCategory(int categoryId) async {
     final result = await connection.query(
-      'DELETE FROM brands WHERE category_id = ?',
+      'DELETE FROM categories  WHERE category_id = ?',
       [categoryId],
     );
 

@@ -64,14 +64,14 @@ Future<void> main() async {
     final flashSaleProductService = FlashSaleProductService(connection);
     final cartService = CartService(connection);
     final wishlistService = WishlistService(connection);
-    final homeService = HomeService(connection);
+    final homeService = HomeService(connection,productService);
     // Initialize routes
     final authRoutes = UserRoutes(userService);
-    final categoryRoutes = CategoryRoutes(categoryService);
+    final categoryRoutes = CategoryRoutes(categoryService,connection);
     final categorizedProductRoutes =
         CategorizedProductRoutes(categorizedProductService);
-    final brandRoutes = BrandRoutes(brandService);
-    final productRoutes = ProductRoutes(productService);
+    final brandRoutes = BrandRoutes(brandService,connection);
+    final productRoutes = ProductRoutes(productService, connection);
     final flashSaleProductRoutes =
         FlashSaleProductRoutes(flashSaleProductService);
     final cartRoutes = CartRoutes(cartService);

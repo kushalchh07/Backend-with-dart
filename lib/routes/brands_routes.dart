@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:mysql1/mysql1.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
@@ -7,8 +8,8 @@ import '../services/brands_service.dart';
 
 class BrandRoutes {
   final BrandService brandService;
-
-  BrandRoutes(this.brandService);
+  final MySqlConnection connection;
+  BrandRoutes(this.brandService, this.connection);
 
   Router get router {
     final router = Router();
@@ -86,28 +87,60 @@ class BrandRoutes {
       }
     });
     router.delete('/delete/<brandId>', (Request request, String brandId) async {
-  try {
-    final int id = int.parse(brandId);
-    final bool isDeleted = await brandService.deleteBrand(id);
+      try {
+        final int id = int.parse(brandId);
+        final bool isDeleted = await brandService.deleteBrand(id);
 
-    if (isDeleted) {
-      return Response.ok(jsonEncode({
-        'status': true,
-        'message': 'Brand deleted successfully',
-      }));
-    } else {
-      return Response(404, body: jsonEncode({
-        'status': false,
-        'message': 'Brand not found',
-      }));
-    }
-  } catch (e) {
-    return Response(500, body: jsonEncode({
-      'status': false,
-      'message': 'Failed to delete brand: ${e.toString()}',
-    }));
-  }
-});
+        if (isDeleted) {
+          return Response.ok(jsonEncode({
+            'status': true,
+            'message': 'Brand deleted successfully',
+          }));
+        } else {
+          return Response(404,
+              body: jsonEncode({
+                'status': false,
+                'message': 'Brand not found',
+              }));
+        }
+      } catch (e) {
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to delete brand: ${e.toString()}',
+            }));
+      }
+    });
+
+// Route for searching brands
+    router.get('/search/brands/<query>', (Request request, String query) async {
+      try {
+        // Perform full-text search on brand name and description
+        final results = await connection.query(
+            'SELECT * FROM brands WHERE MATCH(brand_name, brand_description) AGAINST(? IN NATURAL LANGUAGE MODE) LIMIT 10',
+            [query]);
+
+        final brands = results.map((row) {
+          return {
+            'brand_id': row['brand_id'],
+            'brand_name': row['brand_name'],
+            'brand_description': row['brand_description'],
+            'brand_thumbnail': row['brand_thumbnail'],
+          };
+        }).toList();
+
+        return Response.ok(jsonEncode({
+          'status': true,
+          'brands': brands,
+        }));
+      } catch (e) {
+        return Response(500,
+            body: jsonEncode({
+              'status': false,
+              'message': 'Failed to fetch brands: ${e.toString()}',
+            }));
+      }
+    });
 
     return router;
   }

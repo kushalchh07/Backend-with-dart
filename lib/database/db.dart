@@ -65,6 +65,7 @@ class Database {
           category_name VARCHAR(255) NOT NULL,
           category_thumbnail VARCHAR(255),
           category_description VARCHAR(255),
+          FULLTEXT (category_name, category_description),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         );
@@ -77,6 +78,7 @@ CREATE TABLE IF NOT EXISTS categorized_products (
   product_name VARCHAR(255) NOT NULL,
   product_description VARCHAR(500),
   product_thumbnail VARCHAR(500),
+
   normal_price DECIMAL(10, 2) NOT NULL,
   sell_price DECIMAL(10, 2) NOT NULL,
   total_product_count INT NOT NULL,
@@ -98,6 +100,7 @@ CREATE TABLE IF NOT EXISTS categorized_products (
     brand_name VARCHAR(255) NOT NULL,
     brand_thumbnail VARCHAR(500),
     brand_description  VARCHAR(500),
+    FULLTEXT (brand_name, brand_description),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   );
@@ -113,6 +116,7 @@ CREATE TABLE IF NOT EXISTS categorized_products (
     brand_name VARCHAR(255) NOT NULL,
     product_description VARCHAR(500),
     product_thumbnail VARCHAR(500),
+    FULLTEXT (product_name, product_description),
     normal_price DECIMAL(10, 2) NOT NULL,
     sell_price DECIMAL(10, 2) NOT NULL,
     total_product_count INT NOT NULL,
@@ -192,6 +196,22 @@ CREATE TABLE IF NOT EXISTS categorized_products (
 ''');
 
       print('Ensured "wishlists" table exists.');
+
+
+      await connection.query('''
+CREATE TABLE IF NOT EXISTS user_activity (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    product_id INT,
+    action_type ENUM('view', 'purchase', 'wishlist', 'cart'),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+
+''');
+print('Ensured "user_activity" table exists.');
     } catch (e) {
       print('Error ensuring tables exist: $e');
       rethrow; // Rethrow the exception for further handling

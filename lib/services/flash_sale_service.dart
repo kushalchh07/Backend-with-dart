@@ -53,9 +53,9 @@ class FlashSaleProductService {
     final results = await connection.query('SELECT * FROM flash_sale_products');
     return results.map((row) => FlashSaleProduct.fromMap(row.fields)).toList();
   }
-   Future<bool> deleteCategory(int flashSaleId) async {
+   Future<bool> deleteFlashSale(int flashSaleId) async {
     final result = await connection.query(
-      'DELETE FROM brands WHERE flash_sale_id = ?',
+      'DELETE FROM flash_sale_products WHERE flash_sale_id = ?',
       [flashSaleId],
     );
 

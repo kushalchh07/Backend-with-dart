@@ -68,6 +68,12 @@ class ProductService {
     try {
       // Start a transaction to ensure data consistency
       await connection.transaction((ctx) async {
+        await ctx.query('DELETE FROM cart WHERE product_id = ?', [productId]);
+        await ctx
+            .query('DELETE FROM wishlist WHERE product_id = ?', [productId]);
+        await ctx.query(
+            'DELETE FROM user_activity WHERE product_id = ?', [productId]);
+
         // Delete dependent rows in flash_sale_products first
         await ctx.query(
           'DELETE FROM flash_sale_products WHERE product_id = ?',
@@ -93,5 +99,19 @@ class ProductService {
       print('Failed to delete product: $e');
       return false; // Failure
     }
+  }
+
+  Future<List<Map<String, dynamic>>> getTrendingProducts() async {
+    final results = await connection.query('''
+    SELECT p.*, COUNT(ua.product_id) as popularity 
+    FROM user_activity ua
+    JOIN products p ON ua.product_id = p.product_id
+    WHERE ua.action_type IN ('view', 'purchase')
+    GROUP BY ua.product_id
+    ORDER BY popularity DESC
+    LIMIT 10;
+    ''');
+
+    return results.map((row) => row.fields).toList();
   }
 }

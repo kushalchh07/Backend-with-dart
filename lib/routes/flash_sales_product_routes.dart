@@ -75,7 +75,8 @@ class FlashSaleProductRoutes {
         (Request request, String flashSaleId) async {
       try {
         final int id = int.parse(flashSaleId);
-        final bool isDeleted = await flashSaleProductService.deleteCategory(id);
+        final bool isDeleted =
+            await flashSaleProductService.deleteFlashSale(id);
 
         if (isDeleted) {
           return Response.ok(jsonEncode({
