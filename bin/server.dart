@@ -3,6 +3,7 @@ import 'package:pranshal_cms/routes/brands_routes.dart';
 import 'package:pranshal_cms/routes/cart_routes.dart';
 import 'package:pranshal_cms/routes/flash_sales_product_routes.dart';
 import 'package:pranshal_cms/routes/home_routes.dart';
+import 'package:pranshal_cms/routes/order_routes.dart';
 import 'package:pranshal_cms/routes/product_category_routes.dart';
 import 'package:pranshal_cms/routes/product_routes.dart';
 import 'package:pranshal_cms/routes/user_routes.dart';
@@ -12,6 +13,7 @@ import 'package:pranshal_cms/services/brands_service.dart';
 import 'package:pranshal_cms/services/cart_service.dart';
 import 'package:pranshal_cms/services/flash_sale_service.dart';
 import 'package:pranshal_cms/services/home_service.dart';
+import 'package:pranshal_cms/services/order_service.dart';
 import 'package:pranshal_cms/services/product_category_service.dart';
 import 'package:pranshal_cms/services/product_service.dart';
 import 'package:pranshal_cms/services/user_service.dart';
@@ -64,19 +66,21 @@ Future<void> main() async {
     final flashSaleProductService = FlashSaleProductService(connection);
     final cartService = CartService(connection);
     final wishlistService = WishlistService(connection);
-    final homeService = HomeService(connection,productService);
+    final homeService = HomeService(connection, productService);
+    final orderService = OrderService(connection);
     // Initialize routes
     final authRoutes = UserRoutes(userService);
-    final categoryRoutes = CategoryRoutes(categoryService,connection);
+    final categoryRoutes = CategoryRoutes(categoryService, connection);
     final categorizedProductRoutes =
         CategorizedProductRoutes(categorizedProductService);
-    final brandRoutes = BrandRoutes(brandService,connection);
+    final brandRoutes = BrandRoutes(brandService, connection);
     final productRoutes = ProductRoutes(productService, connection);
     final flashSaleProductRoutes =
         FlashSaleProductRoutes(flashSaleProductService);
     final cartRoutes = CartRoutes(cartService);
     final wishlistRoutes = WishlistRoutes(wishlistService);
     final homeRoutes = HomeRoutes(homeService);
+    final orderRoutes = OrderRoutes(orderService);
     // Create router and mount routes
     final app = Router();
     app.mount('/api/auth/', authRoutes.router);
@@ -88,6 +92,7 @@ Future<void> main() async {
     app.mount('/api/flash-sale-products/', flashSaleProductRoutes.router);
     app.mount('/api/carts/', cartRoutes.router);
     app.mount('/api/wishlists/', wishlistRoutes.router);
+    app.mount('/api/orders/', orderRoutes.router);
 
     // Create a pipeline with middlewares
     final handler = Pipeline()
@@ -96,7 +101,7 @@ Future<void> main() async {
         .addHandler(app);
 
     // Start the server
-    final server = await io.serve(handler, '0.0.0.0', 8080);
+    final server = await io.serve(handler, '0.0.0.0', 8081);
     print('Server running on http://${server.address.host}:${server.port}');
 
     // Handle application shutdown signals

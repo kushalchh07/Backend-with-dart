@@ -19,20 +19,34 @@ class HomeRoutes {
         final brands = await homeService.fetchBrands();
         final products = await homeService.fetchProducts();
         final flashSaleProducts = await homeService.fetchflashsaleProducts();
-        final recommendedProducts =
-            await homeService.fetchRecommendedProducts(userId);
+        if (userId == 0) {
+          return Response.ok(
+            jsonEncode({
+              'status': true,
+              'categories': categories,
+              'brands': brands,
+              'products': products,
+              'flashSaleProducts': flashSaleProducts,
+            }),
+            headers: {'Content-Type': 'application/json'},
+          );
+        } else {
+          final recommendedProducts =
+              await homeService.fetchRecommendedProducts(userId);
+          return Response.ok(
+            jsonEncode({
+              'status': true,
+              'categories': categories,
+              'brands': brands,
+              'products': products,
+              'flashSaleProducts': flashSaleProducts,
+              'recommendedProducts': recommendedProducts,
+            }),
+            headers: {'Content-Type': 'application/json'},
+          );
+        }
+
         // Combine data into a single response
-        return Response.ok(
-          jsonEncode({
-            'status': true,
-            'categories': categories,
-            'brands': brands,
-            'products': products,
-            'flashSaleProducts': flashSaleProducts,
-            'recommendedProducts': recommendedProducts,
-          }),
-          headers: {'Content-Type': 'application/json'},
-        );
       } catch (e) {
         return Response.internalServerError(
           body: jsonEncode({

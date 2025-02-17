@@ -28,7 +28,7 @@ class UserRoutes {
           contactNumber: data['contact_number'],
           password: data['password'],
           otp: data['otp'],
-          userId: data['user_id'],
+         
         );
 
         final registeredUser = await userService.registerUser(user);

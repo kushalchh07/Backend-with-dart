@@ -4,7 +4,7 @@ import 'package:pranshal_cms/services/product_service.dart';
 class HomeService {
   final MySqlConnection connection;
 
-  HomeService(this.connection,this.productService);
+  HomeService(this.connection, this.productService);
   ProductService productService;
   // Fetch categories
   Future<List<Map<String, dynamic>>> fetchCategories() async {
@@ -113,14 +113,16 @@ class HomeService {
               categoryIds);
 
           recommendedProducts = recommendedResults.map((row) {
-            final fields = row.fields;
-            return fields.map((key, value) {
+            final fields = Map<String, dynamic>.from(row.fields);
+
+            // Convert all DateTime fields to String
+            fields.forEach((key, value) {
               if (value is DateTime) {
-                return MapEntry(
-                    key, value.toIso8601String()); // Convert DateTime to String
+                fields[key] = value.toIso8601String();
               }
-              return MapEntry(key, value);
             });
+
+            return fields;
           }).toList();
         }
       }

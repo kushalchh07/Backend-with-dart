@@ -10,7 +10,7 @@ class User {
   bool emailVerified;
 
   User({
-    required this.userId,
+     this.userId,
     required this.fullname,
     required this.emailAddress,
     required this.password,
