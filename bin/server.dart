@@ -6,6 +6,7 @@ import 'package:pranshal_cms/routes/home_routes.dart';
 import 'package:pranshal_cms/routes/order_routes.dart';
 import 'package:pranshal_cms/routes/product_category_routes.dart';
 import 'package:pranshal_cms/routes/product_routes.dart';
+import 'package:pranshal_cms/routes/review_routes.dart';
 import 'package:pranshal_cms/routes/user_routes.dart';
 import 'package:pranshal_cms/routes/category_routes.dart'; // Import category routes
 import 'package:pranshal_cms/routes/wishlist_routes.dart';
@@ -16,6 +17,7 @@ import 'package:pranshal_cms/services/home_service.dart';
 import 'package:pranshal_cms/services/order_service.dart';
 import 'package:pranshal_cms/services/product_category_service.dart';
 import 'package:pranshal_cms/services/product_service.dart';
+import 'package:pranshal_cms/services/review_service.dart';
 import 'package:pranshal_cms/services/user_service.dart';
 import 'package:pranshal_cms/services/category_service.dart'; // Import category service
 import 'package:pranshal_cms/services/wishlist_service.dart';
@@ -68,6 +70,7 @@ Future<void> main() async {
     final wishlistService = WishlistService(connection);
     final homeService = HomeService(connection, productService);
     final orderService = OrderService(connection);
+    final reviewService = ReviewService(connection);
     // Initialize routes
     final authRoutes = UserRoutes(userService);
     final categoryRoutes = CategoryRoutes(categoryService, connection);
@@ -81,6 +84,7 @@ Future<void> main() async {
     final wishlistRoutes = WishlistRoutes(wishlistService);
     final homeRoutes = HomeRoutes(homeService);
     final orderRoutes = OrderRoutes(orderService);
+    final reviewRoutes = ReviewRoutes(reviewService);
     // Create router and mount routes
     final app = Router();
     app.mount('/api/auth/', authRoutes.router);
@@ -93,6 +97,8 @@ Future<void> main() async {
     app.mount('/api/carts/', cartRoutes.router);
     app.mount('/api/wishlists/', wishlistRoutes.router);
     app.mount('/api/orders/', orderRoutes.router);
+    app.mount('/api/reviews/',
+        reviewRoutes.router); // Mount review routes (new line, handler)
 
     // Create a pipeline with middlewares
     final handler = Pipeline()
@@ -101,7 +107,7 @@ Future<void> main() async {
         .addHandler(app);
 
     // Start the server
-    final server = await io.serve(handler, '0.0.0.0', 8081);
+    final server = await io.serve(handler, '0.0.0.0', 8080);
     print('Server running on http://${server.address.host}:${server.port}');
 
     // Handle application shutdown signals

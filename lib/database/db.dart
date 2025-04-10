@@ -217,6 +217,8 @@ CREATE TABLE IF NOT EXISTS orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
+    payment_method VARCHAR(50) NOT NULL DEFAULT 'cash_on_delivery',
+     delivery_location VARCHAR(80) NOT NULL,
     order_status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -238,6 +240,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     quantity INT NOT NULL,
     price DECIMAL(10,2) NOT NULL,
     total_price DECIMAL(10,2) GENERATED ALWAYS AS (quantity * price) STORED,
+    
     FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 );
@@ -247,6 +250,22 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 ''');
       print('Ensured "order item" table exists.');
+
+      await connection.query('''
+CREATE TABLE IF NOT EXISTS reviews (
+    review_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    rating INT NOT NULL,
+    user_name VARCHAR(100) NOT NULL,
+    comment VARCHAR(1000) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+);
+''');
+      print('Ensured "reviews" table exists.');
     } catch (e) {
       print('Error ensuring tables exist: $e');
       rethrow; // Rethrow the exception for further handling

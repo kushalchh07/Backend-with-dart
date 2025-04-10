@@ -5,17 +5,16 @@ class OrderService {
   final MySqlConnection connection;
 
   OrderService(this.connection);
+
   Future<int> placeSingleOrder(Order order, List<OrderItem> items) async {
     try {
       await connection.transaction((txn) async {
-        // Insert into orders table
         var orderResult = await txn.query(
-          'INSERT INTO orders (user_id, total_amount) VALUES (?, ?)',
-          [order.userId, order.totalAmount],
+          'INSERT INTO orders (user_id, total_amount, payment_method, delivery_location) VALUES (?, ?, ?, ?)',
+          [order.userId, order.totalAmount, order.paymentMethod, order.deliveryLocation],
         );
         int orderId = orderResult.insertId!;
 
-        // Insert into order_items table
         for (var item in items) {
           await txn.query(
             'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
@@ -23,16 +22,14 @@ class OrderService {
           );
         }
       });
-      return 1; // Success
+      return 1;
     } catch (e) {
       print("Order placement failed: $e");
-      return 0; // Failure
+      return 0;
     }
   }
 
-// ✅ Place an Order with a Custom List of Products
-  Future<bool> placeCustomOrder(
-      int userId, List<Map<String, dynamic>> products) async {
+  Future<bool> placeCustomOrder(int userId, List<Map<String, dynamic>> products, String paymentMethod, String deliveryLocation) async {
     try {
       double totalAmount = 0;
       List<Map<String, dynamic>> orderItems = [];
@@ -41,13 +38,10 @@ class OrderService {
         int productId = item['product_id'];
         int quantity = item['quantity'];
 
-        // Fetch product price
         var result = await connection.query(
-            "SELECT sell_price FROM products WHERE product_id = ?",
-            [productId]);
+            "SELECT sell_price FROM products WHERE product_id = ?", [productId]);
 
         if (result.isEmpty) {
-          print("Product with ID $productId not found!");
           return false;
         }
 
@@ -63,27 +57,18 @@ class OrderService {
         });
       }
 
-      // Insert into orders table
       var orderResult = await connection.query(
-          "INSERT INTO orders (user_id, total_amount) VALUES (?, ?)",
-          [userId, totalAmount]);
+          "INSERT INTO orders (user_id, total_amount, payment_method, delivery_location) VALUES (?, ?, ?, ?)",
+          [userId, totalAmount, paymentMethod, deliveryLocation]);
 
       int orderId = orderResult.insertId!;
 
-      // Insert all order items
       for (var item in orderItems) {
         await connection.query(
             "INSERT INTO order_items (order_id, product_id, quantity, price, total_price) VALUES (?, ?, ?, ?, ?)",
-            [
-              orderId,
-              item['product_id'],
-              item['quantity'],
-              item['price'],
-              item['total_price']
-            ]);
+            [orderId, item['product_id'], item['quantity'], item['price'], item['total_price']]);
       }
 
-      print("Custom order placed successfully!");
       return true;
     } catch (e) {
       print("Error placing custom order: $e");
@@ -91,50 +76,36 @@ class OrderService {
     }
   }
 
-  Future<int> placeCartOrder(int userId) async {
+  Future<int> placeCartOrder(int userId, String paymentMethod, String deliveryLocation) async {
     try {
-      print("Placing order for user: $userId");
-
-      // Fetch cart items
       var cartResults = await connection.query(
         'SELECT product_id, quantity, sell_price FROM cart WHERE user_id = ?',
         [userId],
       );
 
       if (cartResults.isEmpty) {
-        print("No cart items for user: $userId");
-        return 0; // No cart items
+        return 0;
       }
 
       double totalAmount = 0;
       List<OrderItem> orderItems = [];
 
-      print("Fetching products in the cart for user: $userId");
       for (var row in cartResults) {
-        int productId = row['product_id'];
-        int quantity = row['quantity'];
-        double price = row['sell_price'];
-
-        totalAmount += quantity * price;
-
+        totalAmount += row['quantity'] * row['sell_price'];
         orderItems.add(OrderItem(
           orderId: 0,
-          productId: productId,
-          quantity: quantity,
-          price: price,
+          productId: row['product_id'],
+          quantity: row['quantity'],
+          price: row['sell_price'],
         ));
       }
 
-      print("Inserting into orders table for user: $userId");
-      // Insert into orders table
       var orderResult = await connection.query(
-        'INSERT INTO orders (user_id, total_amount) VALUES (?, ?)',
-        [userId, totalAmount],
+        'INSERT INTO orders (user_id, total_amount, payment_method, delivery_location) VALUES (?, ?, ?, ?)',
+        [userId, totalAmount, paymentMethod, deliveryLocation],
       );
       int orderId = orderResult.insertId!;
 
-      print("Inserting into order_items table for user: $userId");
-      // Insert into order_items table
       for (var item in orderItems) {
         await connection.query(
           'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
@@ -142,33 +113,65 @@ class OrderService {
         );
       }
 
-      print("Clearing the cart after order placement for user: $userId");
-      // Clear the cart after order placement
       await connection.query('DELETE FROM cart WHERE user_id = ?', [userId]);
 
-      print("Order placement from cart successful for user: $userId");
-      return 1; // Success
+      return 1;
     } catch (e) {
-      print("Order placement from cart failed for user: $userId, error: $e");
-      return 0; // Failure
+      print("Order placement from cart failed: $e");
+      return 0;
     }
   }
+  // Fetch all orders (For Admin Dashboard)
+Future<List<Map<String, dynamic>>> getAllOrders() async {
+  try {
+    var results = await connection.query(
+      'SELECT * FROM orders ORDER BY order_date DESC'
+    );
 
-  Future<List<Order>> getUserOrders(int userId) async {
+    List<Map<String, dynamic>> orders = [];
+    for (var row in results) {
+      orders.add({
+        'order_id': row['order_id'],
+        'user_id': row['user_id'],
+        'total_amount': row['total_amount'],
+        'order_status': row['order_status'],
+        'order_date': row['order_date'].toString(),
+        'payment_method': row['payment_method'],
+        'delivery_location': row['delivery_location'],
+      });
+    }
+    return orders;
+  } catch (e) {
+    print("Error fetching all orders: $e");
+    return [];
+  }
+}
+
+// Fetch orders for a specific user
+Future<List<Map<String, dynamic>>> getUserOrders(int userId) async {
+  try {
     var results = await connection.query(
       'SELECT * FROM orders WHERE user_id = ? ORDER BY order_date DESC',
-      [userId],
+      [userId]
     );
 
-    return results.map((row) => Order.fromMap(row.fields)).toList();
+    List<Map<String, dynamic>> orders = [];
+    for (var row in results) {
+      orders.add({
+        'order_id': row['order_id'],
+        'total_amount': row['total_amount'],
+        'order_status': row['order_status'],
+        'order_date': row['order_date'].toString(),
+        'payment_method': row['payment_method'],
+        'delivery_location': row['delivery_location'],
+      });
+    }
+    return orders;
+  } catch (e) {
+    print("Error fetching user orders: $e");
+    return [];
   }
+}
 
-  Future<List<OrderItem>> getOrderDetails(int orderId) async {
-    var results = await connection.query(
-      'SELECT * FROM order_items WHERE order_id = ?',
-      [orderId],
-    );
-
-    return results.map((row) => OrderItem.fromMap(row.fields)).toList();
-  }
+  
 }

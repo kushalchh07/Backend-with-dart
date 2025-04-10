@@ -4,6 +4,8 @@ class Order {
   final double totalAmount;
   final String orderStatus;
   final DateTime orderDate;
+  final String paymentMethod;
+  final String deliveryLocation;
 
   Order({
     this.orderId,
@@ -11,6 +13,8 @@ class Order {
     required this.totalAmount,
     this.orderStatus = "pending",
     DateTime? orderDate,
+    required this.paymentMethod,
+    required this.deliveryLocation,
   }) : orderDate = orderDate ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
@@ -20,6 +24,8 @@ class Order {
       'total_amount': totalAmount,
       'order_status': orderStatus,
       'order_date': orderDate.toIso8601String(),
+      'payment_method': paymentMethod,
+      'delivery_location': deliveryLocation,
     };
   }
 
@@ -30,9 +36,12 @@ class Order {
       totalAmount: map['total_amount'],
       orderStatus: map['order_status'],
       orderDate: DateTime.parse(map['order_date']),
+      paymentMethod: map['payment_method'],
+      deliveryLocation: map['delivery_location'],
     );
   }
 }
+
 
 
 
