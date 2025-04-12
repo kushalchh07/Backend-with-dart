@@ -3,75 +3,47 @@ import 'package:pranshal_cms/services/product_service.dart';
 
 class HomeService {
   final MySqlConnection connection;
+  final ProductService productService;
 
   HomeService(this.connection, this.productService);
-  ProductService productService;
+
+  // Helper to safely convert rows, especially DateTime fields
+  Map<String, dynamic> convertRow(ResultRow row) {
+    final map = Map<String, dynamic>.from(row.fields);
+    map.forEach((key, value) {
+      if (value is DateTime) {
+        map[key] = value.toIso8601String();
+      }
+    });
+    return map;
+  }
+
   // Fetch categories
   Future<List<Map<String, dynamic>>> fetchCategories() async {
     final categories = await connection.query('SELECT * FROM categories');
-    return categories
-        .map((category) => {
-              'category_id': category['category_id'],
-              'category_name': category['category_name'],
-              'category_description': category['category_description'],
-              'category_thumbnail': category['category_thumbnail'],
-            })
-        .toList();
+    return categories.map(convertRow).toList();
   }
 
   // Fetch brands
   Future<List<Map<String, dynamic>>> fetchBrands() async {
     final brands = await connection.query('SELECT * FROM brands');
-    return brands
-        .map((brand) => {
-              'brand_id': brand['brand_id'],
-              'brand_name': brand['brand_name'],
-              'brand_thumbnail': brand['brand_thumbnail'],
-              'brand_description': brand['brand_description'],
-            })
-        .toList();
+    return brands.map(convertRow).toList();
   }
 
-  // Fetch products
+  // Fetch all products
   Future<List<Map<String, dynamic>>> fetchProducts() async {
     final products = await connection.query('SELECT * FROM products');
-    return products
-        .map((product) => {
-              'product_id': product['product_id'],
-              'category_id': product['category_id'],
-              'brand_id': product['brand_id'],
-              'product_name': product['product_name'],
-              'category_name': product['category_name'],
-              'brand_name': product['brand_name'],
-              'product_description': product['product_description'],
-              'product_thumbnail': product['product_thumbnail'],
-              'normal_price': product['normal_price'],
-              'sell_price': product['sell_price'],
-              'total_product_count': product['total_product_count'],
-            })
-        .toList();
+    return products.map(convertRow).toList();
   }
 
+  // Fetch flash sale products
   Future<List<Map<String, dynamic>>> fetchflashsaleProducts() async {
     final products =
         await connection.query('SELECT * FROM flash_sale_products');
-    return products
-        .map((product) => {
-              'product_id': product['product_id'],
-              'category_id': product['category_id'],
-              'brand_id': product['brand_id'],
-              'product_name': product['product_name'],
-              'category_name': product['category_name'],
-              'brand_name': product['brand_name'],
-              'product_description': product['product_description'],
-              'product_thumbnail': product['product_thumbnail'],
-              'normal_price': product['normal_price'],
-              'sell_price': product['sell_price'],
-              'total_product_count': product['total_product_count'],
-            })
-        .toList();
+    return products.map(convertRow).toList();
   }
 
+  // Fetch recommended products for a user
   Future<List<Map<String, dynamic>>> fetchRecommendedProducts(
       String userId) async {
     try {
@@ -112,18 +84,7 @@ class HomeService {
               'SELECT * FROM products WHERE category_id IN ($categoryPlaceholders) LIMIT 10',
               categoryIds);
 
-          recommendedProducts = recommendedResults.map((row) {
-            final fields = Map<String, dynamic>.from(row.fields);
-
-            // Convert all DateTime fields to String
-            fields.forEach((key, value) {
-              if (value is DateTime) {
-                fields[key] = value.toIso8601String();
-              }
-            });
-
-            return fields;
-          }).toList();
+          recommendedProducts = recommendedResults.map(convertRow).toList();
         }
       }
 
@@ -135,6 +96,7 @@ class HomeService {
     }
   }
 
+  // Log user activity (view/click etc.)
   Future<void> logUserActivity(
       int userId, int productId, String actionType) async {
     await connection.query(

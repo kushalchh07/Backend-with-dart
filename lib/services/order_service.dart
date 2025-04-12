@@ -172,6 +172,62 @@ Future<List<Map<String, dynamic>>> getUserOrders(int userId) async {
     return [];
   }
 }
+Future<int> placeSelectedCartOrder(int userId, List<int> selectedProductIds, String paymentMethod, String deliveryLocation) async {
+  try {
+    if (selectedProductIds.isEmpty) return 0;
+
+    String placeholders = selectedProductIds.map((_) => '?').join(',');
+    List<dynamic> queryParams = [userId, ...selectedProductIds];
+
+    var cartResults = await connection.query(
+      'SELECT product_id, quantity, sell_price FROM cart WHERE user_id = ? AND product_id IN ($placeholders)',
+      queryParams,
+    );
+
+    if (cartResults.isEmpty) {
+      return 0;
+    }
+
+    double totalAmount = 0;
+    List<OrderItem> orderItems = [];
+
+    for (var row in cartResults) {
+      totalAmount += row['quantity'] * row['sell_price'];
+      orderItems.add(OrderItem(
+        orderId: 0,
+        productId: row['product_id'],
+        quantity: row['quantity'],
+        price: row['sell_price'],
+      ));
+    }
+
+    var orderResult = await connection.query(
+      'INSERT INTO orders (user_id, total_amount, payment_method, delivery_location) VALUES (?, ?, ?, ?)',
+      [userId, totalAmount, paymentMethod, deliveryLocation],
+    );
+    int orderId = orderResult.insertId!;
+
+    for (var item in orderItems) {
+      await connection.query(
+        'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+        [orderId, item.productId, item.quantity, item.price],
+      );
+    }
+
+    // Delete only selected items from the cart
+    for (var productId in selectedProductIds) {
+      await connection.query(
+        'DELETE FROM cart WHERE user_id = ? AND product_id = ?',
+        [userId, productId],
+      );
+    }
+
+    return 1;
+  } catch (e) {
+    print("Selected cart order placement failed: $e");
+    return 0;
+  }
+}
 
   
 }
